@@ -1,69 +1,218 @@
-<!--
-  Vibe Code Tours — Project Starter
-  A ready-to-build repo with CI, security scanning, and team practices baked in.
-  Click "Use this template" → "Create a new repository" to start your project.
-  Then replace THIS README with your project's own (keep the Quickstart working).
--->
+# Restaurant QR Order System
 
-# {{PROJECT_NAME}}
+A complete QR-based ordering platform where customers scan a table QR code, browse the menu, place orders, and pay — all from their phone. Staff manage orders through dedicated dashboards with real-time updates.
 
-> One line: what you're building, and for which real user.
+## Tech Stack
 
-![ci](../../actions/workflows/ci.yml/badge.svg) ![security](../../actions/workflows/security.yml/badge.svg)
+- **Frontend**: Next.js 14 (App Router)
+- **Backend**: Supabase (PostgreSQL, Auth, Realtime, Storage)
+- **UI**: Tailwind CSS + shadcn/ui
+- **Validation**: Zod
+- **Monorepo**: Turborepo
 
-<!-- A screenshot or GIF of the app goes here — it's the best README section. -->
+## Project Structure
 
----
-
-## Quickstart
-
-```bash
-git clone <your-repo-url> && cd <repo>
-cp .env.example .env        # fill in real values LOCALLY — never commit .env
-# then, for your stack:
-npm install && npm run dev  # Node    (or)
-# pip install -r requirements.txt && python -m app   # Python
+```
+VibeCode_TEAM06/
+├── apps/
+│   └── web/              # Next.js frontend
+├── packages/
+│   └── shared/           # Shared types, utils, validators
+├── supabase/
+│   ├── migrations/       # Database migrations
+│   └── functions/        # Edge functions
+├── docs/                 # Documentation
+└── monorepo-structure.md # Detailed directory structure
 ```
 
-Keep this Quickstart working — it's how a new teammate onboards in 2 minutes.
+## Getting Started
 
-## Stack
+### Prerequisites
 
-<!-- Languages, frameworks, hosting/deploy target, AI/LLM provider. -->
+- Node.js 18+
+- npm 9+
+- Supabase CLI
 
-## Project structure
+### Installation
 
-| Path | What |
-|---|---|
-| `src/` (or `app/`) | application code |
-| `tests/` | tests |
-| `docs/` | ARCHITECTURE.md + decision records |
-| `.github/` | CI, security, PR/issue templates |
+```bash
+# Clone the repository
+git clone <repository-url>
+cd VibeCode_TEAM06
 
-## Team
+# Install dependencies
+npm install
 
-<!-- Members + this week's roles (Anchor / Reviewer). Link your board. -->
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
 
----
+# Start Supabase locally (optional)
+supabase start
 
-## What's already set up for you
+# Run database migrations
+npm run db:migrate
 
-This repo was created from the **Vibe Code Tours project starter**. It ships with:
+# Seed the database (optional)
+npm run db:seed
 
-| File | Gives you |
-|---|---|
-| `.github/workflows/ci.yml` | lint · typecheck · test · build on every PR (stays green until you add each script) |
-| `.github/workflows/security.yml` | gitleaks (leaked keys) + semgrep (SAST) — advisory, report-only |
-| `.github/dependabot.yml` | weekly PRs for vulnerable / outdated dependencies |
-| `.env.example` | secret hygiene — copy to `.env`, never commit real keys |
-| `.github/pull_request_template.md` · `ISSUE_TEMPLATE/` · `CODEOWNERS` | small reviewed PRs, one-owner issues |
-| `docs/ARCHITECTURE.md` · `docs/decisions/` | a 1-page overview + lightweight ADRs |
-| `working-agreement.md` | how your team works (GitHub Flow + rotating roles) |
+# Start development server
+npm run dev
+```
 
-**First thing to do:** follow [`SETUP.md`](./SETUP.md) — a ~1-hour checklist to turn it all on.
+### Development Commands
 
-**Git rule:** branch → PR → 1 teammate review → merge. No push to `main`, no self-merge.
+```bash
+# Start all apps in development mode
+npm run dev
 
-> A green pipeline ≠ secure. Scanners catch leaked keys, known-CVE deps, and injection
-> patterns. They do **not** catch prompt-injection, over-scoped tokens, or hallucinated
-> packages — a human still reviews for those.
+# Build all apps
+npm run build
+
+# Run linter
+npm run lint
+
+# Run tests
+npm run test
+
+# Generate TypeScript types from database
+npm run types:generate
+
+# Run database migrations
+npm run db:migrate
+
+# Reset database
+npm run db:reset
+
+# Seed database
+npm run db:seed
+```
+
+## Features
+
+### Customer Features
+
+- Scan QR code to view menu
+- Browse categories and items
+- Place orders with special instructions
+- View order status in real-time
+- Request bill
+
+### Staff Features
+
+- Kitchen dashboard with real-time orders
+- Order status management (Accept → Preparing → Ready)
+- Table status tracking
+- Payment processing (Cash, Card, Digital Wallet)
+- Bill calculation with tax and discounts
+
+### Management Features
+
+- Restaurant settings and branding
+- Menu management (categories, items, images)
+- Table management with QR codes
+- Staff management and role assignment
+- Sales reports and analytics
+
+### Admin Features
+
+- Multi-restaurant management
+- User management across restaurants
+- System-wide settings
+
+## User Roles
+
+| Role             | Access                                        |
+| ---------------- | --------------------------------------------- |
+| Super Admin      | All restaurants, full system management       |
+| Restaurant Owner | Own restaurant settings, menu, staff, reports |
+| Manager          | Orders, staff scheduling, reports             |
+| Kitchen Staff    | Kitchen display, order status updates         |
+| Waiter           | Table management, order assistance            |
+| Cashier          | Payment processing, bill confirmation         |
+| Customer         | Menu browsing, order placement                |
+
+## Database Schema
+
+See `supabase/migrations/20250706000000_initial_schema.sql` for the complete schema.
+
+### Tables
+
+- `profiles` - User profiles with roles
+- `restaurants` - Restaurant information
+- `categories` - Menu categories
+- `menu_items` - Menu items
+- `tables` - Physical tables with QR codes
+- `order_sessions` - Active dining sessions
+- `orders` - Customer orders
+- `order_items` - Line items in orders
+- `payments` - Payment transactions
+
+### Key Features
+
+- Row Level Security (RLS) on all tables
+- 45 RLS policies for role-based access
+- Atomic functions for order creation and payment processing
+- Real-time subscriptions for live updates
+
+## API Endpoints
+
+### Public
+
+- `GET /api/menu/{restaurantId}` - Get restaurant menu
+
+### Auth Required
+
+- `POST /api/orders` - Create new order
+- `GET /api/orders/{orderId}` - Get order details
+- `POST /api/payments` - Process payment
+
+### Staff Only
+
+- `GET /api/restaurants/{id}/staff` - List restaurant staff
+- `POST /api/restaurants/{id}/staff` - Invite staff
+
+### Owner Only
+
+- `PUT /api/restaurants/{id}` - Update restaurant
+- `PUT /api/restaurants/{id}/logo` - Upload logo
+
+### Super Admin Only
+
+- `POST /api/restaurants` - Create restaurant
+- `DELETE /api/restaurants/{id}` - Delete restaurant
+- `GET /api/admin/users` - List all users
+
+## Deployment
+
+### Vercel (Frontend)
+
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy
+
+### Supabase (Backend)
+
+1. Create a new Supabase project
+2. Run migrations: `supabase db push`
+3. Set up storage buckets
+4. Configure RLS policies
+
+## Documentation
+
+- `order.txt` - Project requirements
+- `feature-spec.md` - Detailed feature specifications
+- `tech-stack.md` - Technology stack details
+- `monorepo-structure.md` - Directory structure guide
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linter
+5. Submit a pull request
+
+## License
+
+MIT
