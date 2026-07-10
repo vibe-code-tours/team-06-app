@@ -1,0 +1,123 @@
+Restaurant QR Order System
+
+
+# Main Components
+
+1. **QR Code Management**
+   - Generate unique QR codes for each table (data URL format)
+   - Link customers directly to the correct table menu
+   - Download and print QR codes from admin dashboard
+   - Regenerate all QR codes for a restaurant
+
+2. **Digital Menu**
+   - Display categories, items, prices, and images
+   - Show item availability
+   - Restaurant branding with logo and name
+   - Full menu endpoint with nested categories and items
+
+3. **Order Management**
+   - Customers create orders from their phones
+   - Orders are sent directly to kitchen dashboard via Supabase Realtime
+   - Table session management prevents duplicate orders
+   - Order locking ensures payment before new orders
+   - Strict status transition enforcement
+
+4. **Kitchen Management**
+   - View incoming orders with item details, quantities, and special instructions
+   - Update order status: PENDING → ACCEPTED → PREPARING → READY
+   - Real-time updates via Supabase Realtime
+
+5. **Staff Management**
+   - View all orders with tabs for Tables, Active Orders, Waiting Payment, and Completed
+   - Table status tracking (Available, Occupied, Waiting Payment, Cleaning)
+   - Confirm bills with tax and discount calculation
+   - Process payments with multiple methods (Cash, Card, Digital Wallet)
+   - Release tables manually
+
+6. **Payment Module**
+   - Support cash, card, and digital payment methods
+   - Generate payment records with transaction details
+   - Auto-complete order after payment
+   - Refund payments
+
+7. **Restaurant Management (Super Admin)**
+   - Create, edit, and delete restaurants
+   - Upload and manage restaurant logos
+   - Activate/deactivate restaurants
+
+8. **Table Session Management**
+   - Create active sessions when orders are placed
+   - Atomic session locking to prevent race conditions
+   - Block new orders if unpaid session exists
+   - Auto-close sessions after payment
+   - Manual table release by staff (cancels unpaid orders)
+
+9. **Role & Permission Management**
+   - 7 user roles: Super Admin, Restaurant Owner, Manager, Kitchen Staff, Waiter, Cashier, Customer
+   - Row Level Security (RLS) policies for all roles
+   - Restaurant-scoped data isolation
+   - Role-based dashboard routing via middleware
+   - Staff invitation and role assignment flow
+
+# Tech Stack
+
+| Layer             | Technology               | Purpose                                  |
+| ----------------- | ------------------------ | ---------------------------------------- |
+| Frontend          | Next.js (App Router)     | SSR/CSR hybrid, API routes, file-based routing |
+| Backend           | Supabase                 | BaaS: Auth, Database, Realtime, Storage  |
+| Database          | PostgreSQL (Supabase)    | Relational data, RLS policies            |
+| Authentication    | Supabase Auth            | JWT-based sessions, role-based access    |
+| Real-time         | Supabase Realtime        | WebSocket subscriptions for live updates |
+| Storage           | Supabase Storage         | Image uploads (logos, menu items)        |
+| QR Generation     | qrcode npm package       | Data URL QR codes per table              |
+| UI Components     | shadcn/ui                | Pre-built accessible components          |
+| Validation        | Zod                      | API endpoint schema validation           |
+| Styling           | Tailwind CSS             | Utility-first responsive design          |
+
+# Database Schema
+
+## Tables (9)
+- profiles (user accounts with roles)
+- restaurants (restaurant profiles)
+- categories (menu categories)
+- menu_items (individual menu items)
+- tables (physical tables with QR codes)
+- order_sessions (active dining sessions)
+- orders (customer orders)
+- order_items (line items in orders)
+- payments (payment transactions)
+
+## Enums (7)
+- user_role: super_admin, restaurant_owner, manager, kitchen_staff, waiter, cashier, customer
+- table_status: AVAILABLE, OCCUPIED, WAITING_PAYMENT, CLEANING
+- order_status: PENDING, ACCEPTED, PREPARING, READY, COMPLETED, CANCELLED
+- order_payment_status: UNPAID, PAID
+- session_status: ACTIVE, CLOSED, RELEASED
+- payment_method: CASH, CARD, DIGITAL_WALLET
+- payment_status: PENDING, COMPLETED, FAILED, REFUNDED
+
+## Database Functions (4)
+- create_order_with_session() — Atomic order creation with session locking
+- update_order_status() — Enforces valid status transitions
+- process_payment() — Atomic payment processing
+- release_table() — Manual table release
+
+# Realtime Subscriptions
+- orders — Kitchen and staff dashboards
+- tables — Staff dashboard table status
+- order_sessions — Session state changes
+- payments — Payment confirmations
+
+# Storage Buckets
+- restaurant-logos (5MB, public read)
+- menu-images (10MB, public read)
+
+# Frontend Routes
+- /login — Authentication
+- /super-admin — Super Admin dashboard
+- /owner — Restaurant Owner dashboard
+- /manager — Manager dashboard
+- /kitchen — Kitchen display
+- /staff — Waiter/Staff dashboard
+- /cashier — Cashier payment terminal
+- /{restaurantId}/{tableNumber} — Customer menu view
