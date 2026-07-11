@@ -214,14 +214,17 @@ See `supabase/migrations/20250706000000_initial_schema.sql` for the complete sch
 - `feature-spec.md` - Detailed feature specifications
 - `tech-stack.md` - Technology stack details
 - `monorepo-structure.md` - Directory structure guide
+- `docs/workflow.md` - Implementation workflow index
+- `docs/workflows/plan-1.md` - Test infrastructure workflow
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Run tests and linter
-5. Submit a pull request
+3. Check the [workflow index](docs/workflow.md) for implementation plans
+4. Make your changes
+5. Run tests and linter
+6. Submit a pull request
 
 ## License
 
