@@ -5,7 +5,7 @@
 This project uses a monorepo architecture with Turborepo for managing multiple packages. The structure separates frontend (Next.js), backend (Supabase), and shared code.
 
 ```
-VibeCode_TEAM06/
+team-06-app/
 ├── apps/
 │   ├── web/                          # Next.js Frontend Application
 │   │   ├── app/                      # App Router (Next.js 13+)

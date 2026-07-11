@@ -106,3 +106,14 @@ A feature is not complete until it satisfies the corresponding checklist item(s)
 `feature-spec.md` under "Definition of Done" — including RLS policy, API validation,
 realtime update, and accessibility requirements where applicable. Treat that section as
 the acceptance criteria, not a nice-to-have.
+
+## Documentation Maintenance
+
+Whenever an implementation plan under `docs/superpowers/plans/` is completed (status: done):
+
+1. Update the affected workflow document under `docs/workflows/`.
+2. Update `docs/workflow.md` if the workflow index or relationships have changed.
+3. Synchronize all Mermaid diagrams with the implemented behavior.
+4. Preserve unrelated documentation.
+5. Remove obsolete TODOs and planned behavior.
+6. Ensure the documentation reflects the current implementation rather than the original plan.

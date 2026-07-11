@@ -13,7 +13,7 @@ A complete QR-based ordering platform where customers scan a table QR code, brow
 ## Project Structure
 
 ```
-VibeCode_TEAM06/
+TEAM-06-APP/
 ├── apps/
 │   └── web/              # Next.js frontend
 ├── packages/
@@ -38,7 +38,7 @@ VibeCode_TEAM06/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd VibeCode_TEAM06
+cd team-06-app
 
 # Install dependencies
 npm install
@@ -87,6 +87,16 @@ npm run db:reset
 # Seed database
 npm run db:seed
 ```
+
+## Testing
+
+1. Install the Supabase CLI (already a devDependency): `npm install`
+2. Start the local Supabase stack: `npm run db:start`
+3. Copy `supabase/.env.test.example` to `supabase/.env.test` and fill in
+   the anon key and service_role key printed by `db:start`.
+4. Apply the schema: `npm run db:reset`
+5. Run unit/integration tests: `npm run test`
+6. Run E2E tests: `npm run e2e` (starts `next dev` automatically)
 
 ## Features
 
