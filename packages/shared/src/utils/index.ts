@@ -1,6 +1,7 @@
 // Shared utility functions
 
 import { format, parseISO } from 'date-fns';
+import * as QRCode from 'qrcode';
 
 // ============================================================================
 // FORMATTING UTILITIES
@@ -231,6 +232,26 @@ export function getNextOrderStatuses(currentStatus: string): string[] {
   };
 
   return validTransitions[currentStatus] ?? [];
+}
+
+// ============================================================================
+// QR CODE UTILITIES
+// ============================================================================
+
+/**
+ * Generate a QR code data URL for a table's customer menu link.
+ * @param restaurantId - Restaurant UUID
+ * @param tableNumber - Table number within the restaurant
+ * @param baseUrl - Deployment base URL (e.g. https://app.example.com), no trailing slash
+ * @returns data:image/png;base64,... string
+ */
+export async function generateTableQrDataUrl(
+  restaurantId: string,
+  tableNumber: number,
+  baseUrl: string
+): Promise<string> {
+  const menuUrl = `${baseUrl}/${restaurantId}/${tableNumber}`;
+  return QRCode.toDataURL(menuUrl, { errorCorrectionLevel: 'M', margin: 2 });
 }
 
 // ============================================================================
