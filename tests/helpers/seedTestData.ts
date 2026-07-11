@@ -31,6 +31,49 @@ const ROLES = [
     'cashier',
 ] as const
 
+// Monotonically increasing counter to generate unique emails per seedTestData call.
+// This ensures that when a test calls seedTestData() twice (for cross-restaurant
+// isolation), each call gets distinct auth users with distinct profiles.
+let seedCounter = 0
+
+async function ensureUser(
+    serviceClient: SupabaseClient,
+    email: string,
+    password: string,
+    metadata: Record<string, unknown>,
+    retries = 3
+): Promise<string> {
+    for (let attempt = 0; attempt < retries; attempt++) {
+        // Try to create the user
+        const { data, error } = await serviceClient.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: metadata,
+        })
+
+        if (data?.user) {
+            return data.user.id
+        }
+
+        // If user already exists, look it up and return its id
+        if (error) {
+            const { data: listData } = await serviceClient.auth.admin.listUsers()
+            const existing = listData?.users?.find(
+                (u: { id: string; email?: string }) => u.email === email
+            )
+            if (existing) return existing.id
+        }
+
+        // Transient auth API error — retry after a brief pause
+        if (attempt < retries - 1) {
+            await new Promise((r) => setTimeout(r, 500))
+        }
+    }
+
+    throw new Error(`Failed to create user ${email} after ${retries} attempts`)
+}
+
 // serviceClient must be created with the service_role key — this bypasses RLS
 // to create fixtures, and uses admin.createUser to seed auth.users directly.
 export async function seedTestData(
@@ -69,27 +112,19 @@ export async function seedTestData(
         .single()
     if (tableError) throw new Error(tableError.message)
 
+    const callId = ++seedCounter
     const profiles = {} as SeedFixture['profiles']
 
     for (const role of ROLES) {
-        const email = `${role}@test.local`
+        const email = `${role}${callId}@test.local`
         const password = 'test-password-123'
 
-        const { data: authUser, error: authError } =
-            await serviceClient.auth.admin.createUser({
-                email,
-                password,
-                email_confirm: true,
-                user_metadata: {
-                    role,
-                    restaurant_id: role === 'super_admin' ? null : restaurant.id,
-                },
-            })
-        if (authError || !authUser.user) {
-            throw new Error(authError?.message ?? 'Failed to create auth user')
-        }
+        const userId = await ensureUser(serviceClient, email, password, {
+            role,
+            restaurant_id: role === 'super_admin' ? null : restaurant.id,
+        })
 
-        profiles[role] = { userId: authUser.user.id, email, password }
+        profiles[role] = { userId, email, password }
     }
 
     return {
