@@ -6,12 +6,15 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src"
   },
   "dependencies": {
+    "date-fns": "^3.6.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "eslint": "^8.57.0",
+    "typescript-eslint": "^7.18.0"
   }
 }

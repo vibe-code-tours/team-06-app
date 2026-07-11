@@ -22,7 +22,7 @@ interface Order {
   created_at: string;
   table: {
     table_number: number;
-  };
+  }[];
   order_items: {
     quantity: number;
     unit_price: number;
@@ -239,7 +239,7 @@ export default function ManagerDashboard() {
                     >
                       <div className="flex items-center gap-4">
                         <div className="font-medium">
-                          Table {order.table.table_number}
+                          Table {order.table[0]?.table_number}
                         </div>
                         <div className="text-sm text-gray-500">
                           {new Date(order.created_at).toLocaleTimeString()}
