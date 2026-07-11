@@ -8,9 +8,11 @@ main
 develop (optional)
 feature
 fix
+build
+chore
 
 eg: Branch Naming (keep it simple)
-`feature/login` , `feature/profile`, `fix/navbar` , etc.
+`feature/login` , `feature/profile`, `fix/navbar` , `build/ci` , etc.
 
 # Protect main
 
@@ -47,19 +49,21 @@ merge -> delete source branch
 [type] <short_description>
 ```
 
-type: `feat`, `fix`, `doc`, `build`, `style` , `refactor` , `test` , `chore`, `ci`
+type: `feat`, `fix`, `docs`, `build`, `style` , `refactor` , `test` , `chore`, `ci`
 
 ## Examples
 
 - `[feat] added user login functionality`
 - `[fix] corrected typo in response message`
-- `[doc] added setup steps to README.md`
+- `[docs] added setup steps to README.md`
 - `[build] updated config for production`
 - `[chore] updated dependencies`
 - `[ci] added cicd for deployment`
 - `[style] fixed formatting`
 - `[refactor] simplified authentication flow`
 - `[test] added unit test for payment module`
+
+merge commit ‌‌also has to follow commit format
 
 feature ownership နဲ သွားကြမယ်
 code review -> 1 reviewer ok -> ကိုယ့် PR မှာ အလှည့်ကျ assign
