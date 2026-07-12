@@ -2,9 +2,28 @@
 
 ## Overview
 
-This workflow documents the implementation of the Kitchen Dashboard feature. It establishes the API route handler pattern, adds the order status service, Realtime polling fallback hook, and wires the kitchen UI with proper error handling and reject action.
+This workflow documents the implementation of the Kitchen Dashboard feature per plan `2026-07-09-kitchen-dashboard.md`. It establishes the API route handler pattern, adds the order status service, Realtime polling fallback hook, and wires the kitchen UI with proper error handling and reject action. Additional UI/theme work was done after the original plan.
 
 ## Status: ✅ Complete
+
+## Original Plan Tasks (2026-07-09-kitchen-dashboard.md)
+
+| Task | Description | Status |
+|------|-------------|--------|
+| Task 1 | Shared API response envelope (ok/err) | ✅ Done |
+| Task 2 | Order status service function | ✅ Done |
+| Task 3 | API route handler for order status updates | ✅ Done |
+| Task 4 | Realtime + polling fallback hook | ✅ Done |
+| Task 5 | Wire kitchen dashboard to API route | ✅ Done |
+
+## Additional Work (Post-Plan)
+
+| Task | Description | Status |
+|------|-------------|--------|
+| Task 6 | Dark theme with brand colors | ✅ Done |
+| Task 7 | Login page theming & logo | ✅ Done |
+| Task 8 | Reject order confirmation dialog | ✅ Done |
+| Task 9 | Workflow documentation | ✅ Done |
 
 ## Workflow Diagram
 
@@ -15,8 +34,12 @@ flowchart TD
     C --> D[Task 3: API Route Handler]
     D --> E[Task 4: Realtime Polling Hook]
     E --> F[Task 5: Kitchen Dashboard Wiring]
-    F --> G[Task 6: Dark Theme & UI Polish]
-    G --> H[Verification & Documentation]
+    F --> G[Post-Plan: UI Polish]
+
+    G --> G1[Task 6: Dark Theme]
+    G --> G2[Task 7: Login Theme & Logo]
+    G --> G3[Task 8: Confirmation Dialog]
+    G --> G4[Task 9: Documentation]
 
     B --> B1[Create ok/err helpers]
     B1 --> B2[Write tests]
@@ -40,25 +63,31 @@ flowchart TD
     F1 --> F2[Wire polling hook]
     F2 --> F3[Add reject button]
     F3 --> F4[Add error display]
-    F4 --> F5[Add confirmation dialog]
 
-    G --> G1[Dark theme CSS variables]
-    G1 --> G2[Brand colors]
-    G2 --> G3[Gradient backgrounds]
-    G3 --> G4[Animations & glow effects]
-    G4 --> G5[Logo integration]
+    G1 --> H[Verification & Documentation]
+    G2 --> H
+    G3 --> H
+    G4 --> H
 ```
 
 ## Task Dependencies
 
 ```mermaid
 graph LR
-    T1[Task 1: API Response] --> T2[Task 2: Order Service]
-    T2 --> T3[Task 3: Route Handler]
-    T1 --> T3
-    T3 --> T5[Task 5: Wiring]
-    T4[Task 4: Polling Hook] --> T5
-    T5 --> T6[Task 6: Theme]
+    subgraph "Original Plan (2026-07-09-kitchen-dashboard.md)"
+        T1[Task 1: API Response] --> T2[Task 2: Order Service]
+        T2 --> T3[Task 3: Route Handler]
+        T1 --> T3
+        T3 --> T5[Task 5: Wiring]
+        T4[Task 4: Polling Hook] --> T5
+    end
+
+    subgraph "Post-Plan Work"
+        T5 --> T6[Task 6: Dark Theme]
+        T5 --> T7[Task 7: Login Theme]
+        T5 --> T8[Task 8: Confirm Dialog]
+        T5 --> T9[Task 9: Documentation]
+    end
 
     style T1 fill:#e3f2fd
     style T2 fill:#e3f2fd
@@ -66,6 +95,9 @@ graph LR
     style T4 fill:#e3f2fd
     style T5 fill:#fff3e0
     style T6 fill:#fce4ec
+    style T7 fill:#fce4ec
+    style T8 fill:#fce4ec
+    style T9 fill:#e8f5e9
 ```
 
 ## Architecture Pattern
@@ -180,17 +212,29 @@ stateDiagram-v2
 | onChange excluded from deps | Prevents channel re-subscription on every render |
 | Confirmation dialog for reject | Prevent accidental order cancellation |
 | Dark theme with gradients | Brand identity, modern aesthetic, reduces eye strain |
+| Brand colors #05234F / #FE740F | Restaurant brand identity |
+| Glassmorphism cards | Modern UI aesthetic, depth perception |
+| PostCSS config for Tailwind | Required for Tailwind CSS compilation |
+| tailwindcss-animate plugin | Required for animations in Tailwind |
 
 ## Success Criteria
 
+### Original Plan (2026-07-09-kitchen-dashboard.md)
 - [x] Kitchen dashboard routes all status changes through API
 - [x] ok()/err() envelope used by route handler
-- [x] Reject order action with confirmation dialog
+- [x] Reject order action (CANCELLED status)
 - [x] Polling fallback for Realtime connection drops
 - [x] Errors displayed to user (not silently swallowed)
 - [x] Tests pass: 4 apiResponse + 2 orderStatus + 3 route + 1 polling = 10 tests
 - [x] useRealtimeWithPolling and orderStatusService have correct signatures for reuse
-- [x] Dark theme with brand colors applied
+
+### Additional Work (Post-Plan)
+- [x] Dark theme with brand colors (#05234F, #FE740F)
+- [x] Gradient backgrounds and glassmorphism cards
+- [x] Animations (slide-up, pulse-glow)
+- [x] Logo integration on login page
+- [x] Confirmation dialog for reject action
+- [x] Workflow documentation created
 
 ## Related Documents
 
