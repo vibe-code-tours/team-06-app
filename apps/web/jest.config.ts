@@ -8,6 +8,7 @@ const config: Config = {
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/apps/web/$1',
         '^@restaurant-qr/shared$': '<rootDir>/packages/shared/src',
+        '^@restaurant-qr/shared/(.*)$': '<rootDir>/packages/shared/src/$1',
     },
     setupFiles: ['<rootDir>/apps/web/jest.setup.ts'],
     // Integration tests hit a real Supabase instance; auth user CRUD + seeding
