@@ -4,44 +4,64 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Brand Colors */
+    --brand-blue: 213 88% 17%;        /* #05234F */
+    --brand-orange: 27 99% 53%;       /* #FE740F */
+
+    /* Pure Dark Theme */
+    --background: 220 50% 8%;         /* Near black with blue tint */
+    --foreground: 0 0% 100%;          /* White text */
+
+    --card: 215 50% 12%;              /* Dark blue-gray cards */
+    --card-foreground: 0 0% 100%;
+
+    --primary: 27 99% 53%;            /* Orange primary */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 213 88% 17%;         /* Dark blue secondary */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 40% 16%;             /* Muted dark */
+    --muted-foreground: 210 20% 60%;  /* Gray text */
+
+    --accent: 27 99% 53%;             /* Orange accent */
+    --accent-foreground: 0 0% 100%;
+
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 40% 20%;            /* Subtle dark borders */
+    --input: 215 40% 18%;
+    --ring: 27 99% 53%;               /* Orange focus ring */
+
+    --radius: 0.75rem;
+
+    /* Gradient definitions */
+    --gradient-primary: linear-gradient(135deg, #05234F 0%, #0A3566 50%, #0D4A80 100%);
+    --gradient-accent: linear-gradient(135deg, #FE740F 0%, #FF8533 100%);
+    --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+    --gradient-glow: radial-gradient(circle at center, rgba(254,116,15,0.15) 0%, transparent 70%);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Same - always dark */
+    --background: 220 50% 8%;
+    --foreground: 0 0% 100%;
+    --card: 215 50% 12%;
+    --card-foreground: 0 0% 100%;
+    --primary: 27 99% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 213 88% 17%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 215 40% 16%;
+    --muted-foreground: 210 20% 60%;
+    --accent: 27 99% 53%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 40% 20%;
+    --input: 215 40% 18%;
+    --ring: 27 99% 53%;
   }
 }
 
@@ -52,4 +72,34 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom animations */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(254, 116, 15, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(254, 116, 15, 0.5); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }

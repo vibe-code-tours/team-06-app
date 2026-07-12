@@ -9,6 +9,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Brand colors (direct hex access)
+        "brand-blue": "#05234F",
+        "brand-orange": "#FE740F",
+
+        // shadcn/ui theme (using CSS variables)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

@@ -79,3 +79,5 @@ supabase/.temp/
 test-results/
 playwright-report/
 blob-report/
+# Superpowers (SDD progress tracking)
+.superpowers/
