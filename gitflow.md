@@ -4,12 +4,11 @@
 
 # Branch
 
-main
-develop (optional)
-feature
-fix
-build
-chore
+`main`,
+`feature/xxx`,
+`fix/xxx`,
+`build/xxx`,
+`chore/xxx`,
 
 eg: Branch Naming (keep it simple)
 `feature/login` , `feature/profile`, `fix/navbar` , `build/ci` , etc.
@@ -46,7 +45,7 @@ merge -> delete source branch
 # Commit messages
 
 ```
-[type] <short_description>
+type: <short_description>
 ```
 
 type: `feat`, `fix`, `docs`, `build`, `style` , `refactor` , `test` , `chore`, `ci`
