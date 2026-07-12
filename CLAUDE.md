@@ -109,12 +109,16 @@ the acceptance criteria, not a nice-to-have.
 
 ## Known gaps / TODO
 
-- **CI `build` step is commented out** in `.github/workflows/ci.yml` (scaffolding phase —
-  needed to unblock merging to `main`). `next build` prerenders role-gated dashboard pages
-  that construct a Supabase client at module load, so it fails without
-  `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the CI environment.
-  Re-enable once CI has (at minimum) placeholder Supabase env vars wired for the build job
-  — don't let this stay disabled past scaffolding.
+- **CI `typecheck` step is a no-op.** No `typecheck` script exists yet in `apps/web` or
+  `packages/shared`, so `npm run typecheck --if-present` silently skips in
+  `.github/workflows/ci.yml`. Type errors only surface incidentally via `next build`'s
+  own `tsc` pass. Add a real `tsc --noEmit` script to both packages so this step actually
+  gates on strict-mode violations, per this file's Code style section.
+- **CI `test` step runs against a real local Supabase instance it spins up itself** —
+  `supabase start`, write `supabase/.env.test` from `supabase status -o json`, run
+  `npm test`, then `supabase stop` (always, even on failure). This is NOT a mock; RLS and
+  DB-function tests in `tests/db/**` and `tests/rls/**` hit real Postgres/Auth. If CI test
+  runs get slow or flaky, suspect the Supabase boot step first.
 
 ## Documentation Maintenance
 

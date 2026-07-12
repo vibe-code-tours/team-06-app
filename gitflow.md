@@ -53,17 +53,17 @@ type: `feat`, `fix`, `docs`, `build`, `style` , `refactor` , `test` , `chore`, `
 
 ## Examples
 
-- `[feat] added user login functionality`
-- `[fix] corrected typo in response message`
-- `[docs] added setup steps to README.md`
-- `[build] updated config for production`
-- `[chore] updated dependencies`
-- `[ci] added cicd for deployment`
-- `[style] fixed formatting`
-- `[refactor] simplified authentication flow`
-- `[test] added unit test for payment module`
+- `feat: added user login functionality`
+- `fix: corrected typo in response message`
+- `docs: added setup steps to README.md`
+- `build: updated config for production`
+- `chore: updated dependencies`
+- `ci: added cicd for deployment`
+- `style: fixed formatting`
+- `refactor: simplified authentication flow`
+- `test: added unit test for payment module`
 
-merge commit ‌‌also has to follow commit format
+### Merge commit ‌‌also has to follow commit format
 
 feature ownership နဲ သွားကြမယ်
 code review -> 1 reviewer ok -> ကိုယ့် PR မှာ အလှည့်ကျ assign
