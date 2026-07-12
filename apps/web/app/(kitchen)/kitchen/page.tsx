@@ -96,7 +96,7 @@ export default function KitchenDashboard() {
 
     if (!response.ok) {
       const { error } = await response.json();
-      setErrorMessage(error ?? 'Failed to update order status');
+      setErrorMessage(error?.message ?? 'Failed to update order status');
       return;
     }
 
@@ -190,7 +190,7 @@ export default function KitchenDashboard() {
                     </Button>
                   )}
 
-                  {nextStatus[order.status] && (
+                  {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
                     <Button
                       variant="outline"
                       className="w-full mt-2"
