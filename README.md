@@ -29,36 +29,54 @@ TEAM-06-APP/
 
 ### Prerequisites
 
-- Node.js 18+
-- npm 9+
+- Node.js 22+ (required by `@supabase/supabase-js`'s native WebSocket support)
+- npm 10+
 - Supabase CLI
 
 ### Installation
+
+Requires Docker Desktop running (Supabase's local stack runs as Docker containers).
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd team-06-app
 
-# Install dependencies
+# Install dependencies (includes the Supabase CLI as a devDependency)
 npm install
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Supabase credentials
+# Start Supabase locally — this also applies all migrations on first boot
+npm run db:start
 
-# Start Supabase locally (optional)
-supabase start
+# Print your local instance's URL + keys
+npx supabase status
+```
 
-# Run database migrations
-npm run db:migrate
+`npm run db:start` prints (or `npx supabase status` re-prints) the local `API URL`,
+`anon key`, and `service_role key`. Use them to fill in two separate env files —
+they're for different purposes and are both gitignored:
 
+```bash
+# apps/web/.env.local — used by `npm run dev` (the Next.js app)
+cp .env.example apps/web/.env.local
+# edit apps/web/.env.local with the local API URL + anon key (+ service_role key)
+
+# supabase/.env.test — used by `npm run test` (Jest/RLS/integration tests)
+cp supabase/.env.test.example supabase/.env.test
+# edit supabase/.env.test with the local API URL + anon key + service_role key
+```
+
+```bash
 # Seed the database (optional)
 npm run db:seed
 
 # Start development server
 npm run dev
 ```
+
+Already have Supabase running and just need to reapply the schema (e.g. after
+pulling new migrations)? Use `npm run db:reset` — **not** `npm run db:migrate`,
+which pushes to a _linked remote_ project and doesn't apply to local dev.
 
 ### Development Commands
 
@@ -78,10 +96,10 @@ npm run test
 # Generate TypeScript types from database
 npm run types:generate
 
-# Run database migrations
+# Push migrations to a LINKED REMOTE project (not local dev — see Getting Started)
 npm run db:migrate
 
-# Reset database
+# Reset local database (drops + reapplies all migrations)
 npm run db:reset
 
 # Seed database
@@ -90,13 +108,19 @@ npm run db:seed
 
 ## Testing
 
-1. Install the Supabase CLI (already a devDependency): `npm install`
-2. Start the local Supabase stack: `npm run db:start`
-3. Copy `supabase/.env.test.example` to `supabase/.env.test` and fill in
-   the anon key and service_role key printed by `db:start`.
-4. Apply the schema: `npm run db:reset`
-5. Run unit/integration tests: `npm run test`
-6. Run E2E tests: `npm run e2e` (starts `next dev` automatically)
+Assumes you've completed [Getting Started](#getting-started) — local Supabase running
+and `supabase/.env.test` filled in.
+
+```bash
+# Run unit/integration tests (tests/db/**, tests/rls/** hit the real local instance)
+npm run test
+
+# Run E2E tests (starts `next dev` automatically)
+npm run e2e
+```
+
+CI runs the same flow automatically per PR — `supabase start`, apply migrations, run
+tests, `supabase stop` — see `.github/workflows/ci.yml`.
 
 ## Features
 

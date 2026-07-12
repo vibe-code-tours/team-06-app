@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+!.env.test.example
+!supabase/.env.test.example
 
 # Node
 node_modules/

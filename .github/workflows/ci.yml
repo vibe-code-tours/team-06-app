@@ -32,7 +32,7 @@ jobs:
         if: ${{ hashFiles('package.json') != '' }}
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
       - name: Install (Node)
         if: ${{ hashFiles('package.json') != '' }}
@@ -45,35 +45,39 @@ jobs:
       - name: Typecheck
         if: ${{ hashFiles('package.json') != '' }}
         run: npm run typecheck --if-present
-      # - name: Test
-      # if: ${{ hashFiles('package.json') != '' }}
-      # run: npm test --if-present
 
-      # ---------- Supabase connectivity (advisory placeholder) ----------
-      # tests/rls/** and tests/helpers/** need a real Supabase instance + supabase/.env.test
-      # to actually run — neither exists yet while we're scaffolding. This step is a
-      # stand-in: it's a no-op until .env.test shows up, and even then only reports
-      # reachability without gating the build. Replace with `supabase start` + migrate
-      # once we're ready to run RLS/integration tests for real in CI.
-      - name: Supabase connectivity check (placeholder)
-        if: ${{ hashFiles('supabase/.env.test') != '' }}
-        continue-on-error: true
+      # ---------- Local Supabase (Docker) for RLS/integration tests ----------
+      # tests/db/** and tests/rls/** hit a real Postgres/Auth instance via
+      # tests/helpers/supabaseTestClient.ts — no mocks. `supabase start` runs
+      # migrations automatically on boot, matching local dev (`npm run db:start`).
+      - name: Start Supabase (local)
+        if: ${{ hashFiles('supabase/config.toml') != '' }}
+        run: npx supabase start --workdir .
+
+      - name: Write supabase/.env.test (local instance)
+        if: ${{ hashFiles('supabase/config.toml') != '' }}
         run: |
-          set -a
-          source supabase/.env.test
-          set +a
-          curl -sf "${NEXT_PUBLIC_SUPABASE_URL}/auth/v1/health" \
-            -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
-            && echo "✅ Supabase reachable" \
-            || echo "⚠️  Supabase unreachable (advisory only, not blocking)"
+          STATUS=$(npx supabase status -o json)
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(echo "$STATUS" | jq -r .API_URL)"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo "$STATUS" | jq -r .ANON_KEY)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$STATUS" | jq -r .SERVICE_ROLE_KEY)"
+          } > supabase/.env.test
 
-      # comment out now (for scaffolding project)
-      # - name: Build
-      # if: ${{ hashFiles('package.json') != '' }}
-      # Dashboard pages construct a Supabase client at module load, so `next build`
-      # needs *some* well-formed URL/key to prerender — it doesn't need to actually
-      # connect. Placeholders only; real values are injected at deploy time.
-      # env:
-      #   NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-      #   NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-      # run: npm run build --if-present
+      - name: Test
+        if: ${{ hashFiles('package.json') != '' }}
+        run: npm test --if-present
+
+      - name: Stop Supabase (local)
+        if: ${{ always() && hashFiles('supabase/config.toml') != '' }}
+        run: npx supabase stop --no-backup
+
+      - name: Build
+        if: ${{ hashFiles('package.json') != '' }}
+        # Dashboard pages construct a Supabase client at module load, so `next build`
+        # needs *some* well-formed URL/key to prerender — it doesn't need to actually
+        # connect. Placeholders only; real values are injected at deploy time.
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+        run: npm run build --if-present
