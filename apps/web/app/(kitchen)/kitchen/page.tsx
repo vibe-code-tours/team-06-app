@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useRealtimeWithPolling } from '@/hooks/useRealtimeWithPolling';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,69 +45,65 @@ const nextStatus: Record<string, string> = {
 export default function KitchenDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = createClient();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          status,
-          created_at,
-          special_instructions,
-          table:tables(table_number, name),
-          order_items(
-            id,
-            quantity,
-            special_instructions,
-            menu_item:menu_items(name)
-          )
-        `)
-        .in('status', ['PENDING', 'ACCEPTED', 'PREPARING'])
-        .order('created_at', { ascending: true });
-
-      if (data) {
-        setOrders(data as unknown as Order[]);
-      }
-      setLoading(false);
-    };
-
-    fetchOrders();
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('orders')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-        },
-        () => {
-          fetchOrders();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
-
-  const updateOrderStatus = async (orderId: string, currentStatus: string) => {
-    const newStatus = nextStatus[currentStatus];
-    if (!newStatus) return;
-
-    const { error } = await supabase
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
       .from('orders')
-      .update({ status: newStatus })
-      .eq('id', orderId);
+      .select(`
+        id,
+        status,
+        created_at,
+        special_instructions,
+        table:tables(table_number, name),
+        order_items(
+          id,
+          quantity,
+          special_instructions,
+          menu_item:menu_items(name)
+        )
+      `)
+      .in('status', ['PENDING', 'ACCEPTED', 'PREPARING'])
+      .order('created_at', { ascending: true });
 
-    if (!error) {
-      setOrders(orders.filter((order) => order.id !== orderId || newStatus === 'READY'));
+    if (error) {
+      setErrorMessage(error.message);
+    } else if (data) {
+      setOrders(data as unknown as Order[]);
+      setErrorMessage(null);
     }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useRealtimeWithPolling({
+    channelName: 'kitchen-orders',
+    table: 'orders',
+    onChange: fetchOrders,
+  });
+
+  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+    const response = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    if (!response.ok) {
+      const { error } = await response.json();
+      setErrorMessage(error ?? 'Failed to update order status');
+      return;
+    }
+
+    setErrorMessage(null);
+    setOrders((current) =>
+      current.filter((order) => order.id !== orderId || newStatus === 'READY')
+    );
   };
 
   if (loading) {
@@ -124,6 +121,12 @@ export default function KitchenDashboard() {
           <ChefHat className="h-8 w-8" />
           <h1 className="text-3xl font-bold">Kitchen Display</h1>
         </div>
+
+        {errorMessage && (
+          <div className="mb-6 p-3 text-sm text-red-600 bg-red-50 rounded-md" role="alert">
+            {errorMessage}
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <Card>
@@ -145,7 +148,7 @@ export default function KitchenDashboard() {
                         </span>
                       )}
                     </CardTitle>
-                    <Badge className={statusColors[order.status]}>
+                    <Badge className={statusColors[order.status]} aria-label={`Order status: ${order.status}`}>
                       {order.status}
                     </Badge>
                   </div>
@@ -179,10 +182,22 @@ export default function KitchenDashboard() {
                   {nextStatus[order.status] && (
                     <Button
                       className="w-full"
-                      onClick={() => updateOrderStatus(order.id, order.status)}
+                      onClick={() => updateOrderStatus(order.id, nextStatus[order.status])}
+                      aria-label={`Mark order as ${nextStatus[order.status]}`}
                     >
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Mark as {nextStatus[order.status]}
+                    </Button>
+                  )}
+
+                  {nextStatus[order.status] && (
+                    <Button
+                      variant="outline"
+                      className="w-full mt-2"
+                      onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
+                      aria-label="Reject order"
+                    >
+                      Reject Order
                     </Button>
                   )}
                 </CardContent>
