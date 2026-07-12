@@ -20,7 +20,8 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@restaurant-qr/shared": ["../../packages/shared/src"]
+      "@restaurant-qr/shared": ["../../packages/shared/src"],
+      "@restaurant-qr/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
