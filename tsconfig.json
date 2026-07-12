@@ -14,6 +14,7 @@
     "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
+      "@/*": ["apps/web/*"],
       "@restaurant-qr/shared": ["packages/shared/src"],
       "@restaurant-qr/shared/*": ["packages/shared/src/*"]
     }

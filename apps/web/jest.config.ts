@@ -4,7 +4,7 @@ const config: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     rootDir: '../..',
-    testMatch: ['<rootDir>/tests/**/*.test.ts', '<rootDir>/apps/web/**/*.test.ts'],
+    testMatch: ['<rootDir>/tests/**/*.test.ts', '<rootDir>/tests/**/*.test.tsx', '<rootDir>/apps/web/**/*.test.ts', '<rootDir>/apps/web/**/*.test.tsx'],
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/apps/web/$1',
         '^@restaurant-qr/shared$': '<rootDir>/packages/shared/src',
