@@ -107,6 +107,15 @@ A feature is not complete until it satisfies the corresponding checklist item(s)
 realtime update, and accessibility requirements where applicable. Treat that section as
 the acceptance criteria, not a nice-to-have.
 
+## Known gaps / TODO
+
+- **CI `build` step is commented out** in `.github/workflows/ci.yml` (scaffolding phase —
+  needed to unblock merging to `main`). `next build` prerenders role-gated dashboard pages
+  that construct a Supabase client at module load, so it fails without
+  `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` in the CI environment.
+  Re-enable once CI has (at minimum) placeholder Supabase env vars wired for the build job
+  — don't let this stay disabled past scaffolding.
+
 ## Documentation Maintenance
 
 Whenever an implementation plan under `docs/superpowers/plans/` is completed (status: done):
