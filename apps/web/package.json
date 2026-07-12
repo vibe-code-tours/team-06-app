@@ -1,0 +1,46 @@
+{
+  "name": "@restaurant-qr/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest --config jest.config.ts"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
+    "@radix-ui/react-tabs": "^1.1.16",
+    "@restaurant-qr/shared": "*",
+    "@supabase/ssr": "^0.5.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "date-fns": "^3.6.0",
+    "lucide-react": "^0.400.0",
+    "next": "^14.0.0",
+    "qrcode": "^1.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.52.0",
+    "tailwind-merge": "^2.4.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.14.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.0.0",
+    "jest": "^30.4.2",
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "ts-jest": "^29.4.11",
+    "typescript": "^5.4.0"
+  }
+}
