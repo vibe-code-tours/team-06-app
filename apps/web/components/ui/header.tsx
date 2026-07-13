@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { LogOut, Store } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 
 interface UserProfile {
     full_name: string
@@ -51,21 +52,27 @@ export default function Header() {
     }
 
     return (
-        <header className="border-b border-border bg-card">
+        <header className="border-b border-black/10 bg-sky-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-14">
-                    <div className="flex items-center gap-2">
-                        <Store className="h-5 w-5 text-primary" />
-                        <span className="font-semibold text-foreground">QR Dine</span>
+                    <div className="flex items-center">
+                        <Image
+                            src="/QR_DINE_LOGO_NO_BG.png"
+                            alt="QR Dine"
+                            width={120}
+                            height={40}
+                            className="h-9 w-auto"
+                            priority
+                        />
                     </div>
 
                     <div className="flex items-center gap-4">
                         {profile && (
                             <>
-                                <span className="text-sm text-muted-foreground hidden sm:inline">
+                                <span className="text-sm text-gray-500 hidden sm:inline">
                                     {formatRole(profile.role)}
                                 </span>
-                                <span className="text-sm font-medium text-foreground">
+                                <span className="text-sm font-medium text-gray-900">
                                     {profile.full_name}
                                 </span>
                             </>
@@ -74,7 +81,7 @@ export default function Header() {
                             variant="ghost"
                             size="sm"
                             onClick={handleLogout}
-                            className="text-muted-foreground hover:text-foreground"
+                            className="text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                         >
                             <LogOut className="h-4 w-4 mr-1" />
                             Logout

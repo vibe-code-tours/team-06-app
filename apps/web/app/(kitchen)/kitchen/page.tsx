@@ -128,7 +128,7 @@ export default function KitchenDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--gradient-primary)' }}>
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-orange border-t-transparent"></div>
           <p className="text-white/60 text-sm">Loading orders...</p>
@@ -138,12 +138,8 @@ export default function KitchenDashboard() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: 'var(--gradient-primary)' }}>
-      {/* Ambient glow effect */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--gradient-glow)' }} />
-
-      <div className="relative z-10 p-6 md:p-8">
-        <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen p-8">
+      <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
@@ -268,7 +264,6 @@ export default function KitchenDashboard() {
               })}
             </div>
           )}
-        </div>
       </div>
 
       {/* Reject Order Confirmation Dialog */}

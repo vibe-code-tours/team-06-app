@@ -9,7 +9,7 @@
     --brand-orange: 27 99% 53%;       /* #FE740F */
 
     /* Pure Dark Theme */
-    --background: 220 50% 8%;         /* Near black with blue tint */
+    --background: 220 45% 14%;        /* Lighter navy with blue tint */
     --foreground: 0 0% 100%;          /* White text */
 
     --card: 215 50% 12%;              /* Dark blue-gray cards */
@@ -45,7 +45,7 @@
 
   .dark {
     /* Same - always dark */
-    --background: 220 50% 8%;
+    --background: 220 45% 14%;
     --foreground: 0 0% 100%;
     --card: 215 50% 12%;
     --card-foreground: 0 0% 100%;

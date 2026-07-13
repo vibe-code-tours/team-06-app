@@ -14,6 +14,18 @@ const TABLES_IN_DELETE_ORDER = [
 ] as const
 
 export async function resetDatabase(client: SupabaseClient): Promise<void> {
+    // Hard guard: this function deletes every auth user and truncates every
+    // table. Refuse to run against anything but a local Supabase instance,
+    // even if supabase/.env.test is ever accidentally pointed at cloud.
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+    const isLocal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(url)
+    if (!isLocal) {
+        throw new Error(
+            `resetDatabase() refused to run against non-local Supabase URL: "${url}". ` +
+                'Check supabase/.env.test — it must point at 127.0.0.1, not a cloud project.'
+        )
+    }
+
     // Delete auth users first — profiles FK references auth.users(id).
     // Delete tables in reverse FK order so child rows are removed before parents.
     let page = 1

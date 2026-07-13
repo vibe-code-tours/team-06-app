@@ -148,7 +148,7 @@ export default function StaffDashboard() {
   const completedOrders = orders.filter((o) => o.status === 'COMPLETED');
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <Users className="h-8 w-8" />
