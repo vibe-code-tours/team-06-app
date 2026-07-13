@@ -530,6 +530,10 @@ export type Database = {
         }
         Returns: string
       }
+      refund_payment: {
+        Args: { p_payment_id: string; p_reason: string }
+        Returns: string
+      }
       release_table: { Args: { p_table_id: string }; Returns: undefined }
       update_order_status: {
         Args: {
