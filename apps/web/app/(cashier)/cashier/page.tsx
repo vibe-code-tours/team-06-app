@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditCard, DollarSign, Smartphone } from 'lucide-react';
 
 interface OrderItem {
@@ -243,165 +244,159 @@ export default function CashierDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Orders List */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Payments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {orders.length === 0 ? (
-                  <div className="py-8 text-center text-gray-500">
-                    No orders awaiting payment
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {orders.map((order) => {
-                      const summary = calculateSummary(order);
-                      return (
-                        <div
-                          key={order.id}
-                          className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                            selectedOrder?.id === order.id
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'hover:bg-gray-50'
-                          }`}
-                          onClick={() => setSelectedOrder(order)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <div className="font-medium">
-                                Table {order.table.table_number}
-                                {order.table.name && (
-                                  <span className="text-sm text-gray-500 ml-2">
-                                    ({order.table.name})
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {order.order_items.length} items •{' '}
-                                {new Date(order.created_at).toLocaleTimeString()}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-bold">
-                                ${summary.total.toFixed(2)}
-                              </div>
-                              <Badge variant="outline">{order.status}</Badge>
-                            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Payments</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {orders.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                No orders awaiting payment
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((order) => {
+                  const summary = calculateSummary(order);
+                  return (
+                    <div
+                      key={order.id}
+                      className="p-4 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50"
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">
+                            Table {order.table.table_number}
+                            {order.table.name && (
+                              <span className="text-sm text-gray-500 ml-2">
+                                ({order.table.name})
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {order.order_items.length} items •{' '}
+                            {new Date(order.created_at).toLocaleTimeString()}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Payment Summary */}
-          <div>
-            <Card className="sticky top-8">
-              <CardHeader>
-                <CardTitle>Payment Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {selectedOrder ? (
-                  <div className="space-y-4">
-                    <div className="pb-4 border-b">
-                      <div className="font-medium mb-2">
-                        Table {selectedOrder.table.table_number}
-                      </div>
-                      <div className="space-y-1 text-sm">
-                        {selectedOrder.order_items.map((item) => (
-                          <div key={item.id} className="flex justify-between">
-                            <span>
-                              {item.quantity}x {item.menu_item.name}
-                            </span>
-                            <span>
-                              ${(item.unit_price * item.quantity).toFixed(2)}
-                            </span>
+                        <div className="text-right">
+                          <div className="font-bold">
+                            ${summary.total.toFixed(2)}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label htmlFor="discount" className="text-sm font-medium">
-                        Discount ($)
-                      </label>
-                      <Input
-                        id="discount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={discountAmount}
-                        onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Subtotal</span>
-                        <span>${calculateSummary(selectedOrder).subtotal.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
-                        <span>${calculateSummary(selectedOrder).tax.toFixed(2)}</span>
-                      </div>
-                      {calculateSummary(selectedOrder).discount > 0 && (
-                        <div className="flex justify-between text-sm text-green-700">
-                          <span>Discount</span>
-                          <span>-${calculateSummary(selectedOrder).discount.toFixed(2)}</span>
+                          <Badge variant="outline">{order.status}</Badge>
                         </div>
-                      )}
-                      <div className="flex justify-between font-bold text-lg pt-2 border-t">
-                        <span>Total</span>
-                        <span>${calculateSummary(selectedOrder).total.toFixed(2)}</span>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-                    <div className="space-y-2 pt-4">
-                      <Button
-                        className="w-full"
-                        onClick={() => processPayment(selectedOrder.id, 'CASH')}
-                        disabled={processing}
-                      >
-                        <DollarSign className="h-4 w-4 mr-2" />
-                        Cash
-                      </Button>
-                      <Button
-                        className="w-full"
-                        variant="outline"
-                        onClick={() => processPayment(selectedOrder.id, 'CARD')}
-                        disabled={processing}
-                      >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Card
-                      </Button>
-                      <Button
-                        className="w-full"
-                        variant="outline"
-                        onClick={() =>
-                          processPayment(selectedOrder.id, 'DIGITAL_WALLET')
-                        }
-                        disabled={processing}
-                      >
-                        <Smartphone className="h-4 w-4 mr-2" />
-                        Digital Wallet
-                      </Button>
+        <Dialog
+          open={selectedOrder !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedOrder(null);
+              setDiscountAmount(0);
+            }
+          }}
+        >
+          <DialogContent>
+            {selectedOrder && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>
+                    Payment Summary — Table {selectedOrder.table.table_number}
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div className="pb-4 border-b">
+                    <div className="space-y-1 text-sm">
+                      {selectedOrder.order_items.map((item) => (
+                        <div key={item.id} className="flex justify-between">
+                          <span>
+                            {item.quantity}x {item.menu_item.name}
+                          </span>
+                          <span>
+                            ${(item.unit_price * item.quantity).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ) : (
-                  <div className="py-8 text-center text-gray-500">
-                    Select an order to process payment
+
+                  <div className="space-y-1">
+                    <label htmlFor="discount" className="text-sm font-medium">
+                      Discount ($)
+                    </label>
+                    <Input
+                      id="discount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={discountAmount}
+                      onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+                    />
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal</span>
+                      <span>${calculateSummary(selectedOrder).subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
+                      <span>${calculateSummary(selectedOrder).tax.toFixed(2)}</span>
+                    </div>
+                    {calculateSummary(selectedOrder).discount > 0 && (
+                      <div className="flex justify-between text-sm text-green-700">
+                        <span>Discount</span>
+                        <span>-${calculateSummary(selectedOrder).discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                      <span>Total</span>
+                      <span>${calculateSummary(selectedOrder).total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-2">
+                    <Button
+                      className="w-full"
+                      onClick={() => processPayment(selectedOrder.id, 'CASH')}
+                      disabled={processing}
+                    >
+                      <DollarSign className="h-4 w-4 mr-2" />
+                      Cash
+                    </Button>
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => processPayment(selectedOrder.id, 'CARD')}
+                      disabled={processing}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Card
+                    </Button>
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() =>
+                        processPayment(selectedOrder.id, 'DIGITAL_WALLET')
+                      }
+                      disabled={processing}
+                    >
+                      <Smartphone className="h-4 w-4 mr-2" />
+                      Digital Wallet
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <Card className="mt-6">
           <CardHeader>
