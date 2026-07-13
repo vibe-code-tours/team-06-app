@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useRealtimeWithPolling } from '@/hooks/useRealtimeWithPolling';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CreditCard, DollarSign, Smartphone, Wallet } from 'lucide-react';
+import { CreditCard, DollarSign, Smartphone } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -34,7 +35,15 @@ interface Order {
 interface PaymentSummary {
   subtotal: number;
   tax: number;
+  discount: number;
   total: number;
+}
+
+interface RecentPayment {
+  id: string;
+  total_amount: number;
+  payment_status: string;
+  order: { table: { table_number: number } };
 }
 
 export default function CashierDashboard() {
@@ -42,57 +51,106 @@ export default function CashierDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [taxRate, setTaxRate] = useState(0.1); // 10% default
+  const [taxRate, setTaxRate] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [recentPayments, setRecentPayments] = useState<RecentPayment[]>([]);
   const supabase = createClient();
+  const searchParams = useSearchParams();
+
+  const fetchOrders = useCallback(async () => {
+    const { data } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        status,
+        payment_status,
+        created_at,
+        special_instructions,
+        table:tables(table_number, name),
+        order_items(
+          id,
+          quantity,
+          unit_price,
+          menu_item:menu_items(name)
+        )
+      `)
+      .in('status', ['READY', 'COMPLETED'])
+      .eq('payment_status', 'UNPAID')
+      .order('created_at', { ascending: true });
+
+    if (data) {
+      setOrders(data as unknown as Order[]);
+    }
+    setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchTaxRate = useCallback(async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('restaurant_id')
+      .eq('id', user.id)
+      .single();
+    if (!profile?.restaurant_id) return;
+
+    const { data: restaurant } = await supabase
+      .from('restaurants')
+      .select('tax_rate')
+      .eq('id', profile.restaurant_id)
+      .single();
+    if (restaurant) {
+      setTaxRate(Number(restaurant.tax_rate));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchRecentPayments = useCallback(async () => {
+    const { data } = await supabase
+      .from('payments')
+      .select('id, total_amount, payment_status, order:orders(table:tables(table_number))')
+      .eq('payment_status', 'COMPLETED')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (data) {
+      setRecentPayments(data as unknown as RecentPayment[]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          status,
-          payment_status,
-          created_at,
-          special_instructions,
-          table:tables(table_number, name),
-          order_items(
-            id,
-            quantity,
-            unit_price,
-            menu_item:menu_items(name)
-          )
-        `)
-        .in('status', ['READY', 'COMPLETED'])
-        .eq('payment_status', 'UNPAID')
-        .order('created_at', { ascending: true });
-
-      if (data) {
-        setOrders(data as unknown as Order[]);
-      }
-      setLoading(false);
-    };
-
     fetchOrders();
+    fetchTaxRate();
+    fetchRecentPayments();
+  }, [fetchOrders, fetchTaxRate, fetchRecentPayments]);
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('cashier-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-        },
-        () => fetchOrders()
-      )
-      .subscribe();
+  useEffect(() => {
+    const orderIdParam = searchParams.get('order');
+    if (orderIdParam) {
+      const match = orders.find((o) => o.id === orderIdParam);
+      if (match) {
+        setSelectedOrder(match);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders, searchParams]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
+  useRealtimeWithPolling({
+    channelName: 'cashier-orders',
+    table: 'orders',
+    onChange: fetchOrders,
+  });
+
+  useRealtimeWithPolling({
+    channelName: 'cashier-payments',
+    table: 'payments',
+    onChange: fetchRecentPayments,
+  });
 
   const calculateSummary = (order: Order): PaymentSummary => {
     const subtotal = order.order_items.reduce(
@@ -100,11 +158,13 @@ export default function CashierDashboard() {
       0
     );
     const tax = subtotal * taxRate;
-    const total = subtotal + tax;
+    const discount = Math.min(discountAmount, subtotal + tax);
+    const total = subtotal + tax - discount;
 
     return {
       subtotal,
       tax,
+      discount,
       total,
     };
   };
@@ -119,21 +179,46 @@ export default function CashierDashboard() {
 
     const summary = calculateSummary(order);
 
-    // Call the process_payment function
-    const { data, error } = await supabase.rpc('process_payment', {
+    const { error } = await supabase.rpc('process_payment', {
       p_order_id: orderId,
       p_amount: summary.subtotal,
       p_tax_amount: summary.tax,
-      p_discount_amount: 0,
+      p_discount_amount: summary.discount,
       p_payment_method: method,
     });
 
-    if (!error) {
-      setOrders(orders.filter((o) => o.id !== orderId));
-      setSelectedOrder(null);
+    if (error) {
+      setErrorMessage(error.message);
+      setProcessing(false);
+      return;
     }
 
+    setOrders(orders.filter((o) => o.id !== orderId));
+    setSelectedOrder(null);
+    setDiscountAmount(0);
+    setErrorMessage(null);
     setProcessing(false);
+    fetchRecentPayments();
+  };
+
+  const handleRefund = async (paymentId: string) => {
+    const reason = window.prompt('Refund reason (required):');
+    if (!reason || reason.trim().length === 0) return;
+
+    const response = await fetch(`/api/payments/${paymentId}/refund`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason }),
+    });
+
+    if (!response.ok) {
+      const { error } = await response.json();
+      setErrorMessage(error?.message ?? 'Failed to process refund');
+      return;
+    }
+
+    setErrorMessage(null);
+    fetchRecentPayments();
   };
 
   if (loading) {
@@ -151,6 +236,12 @@ export default function CashierDashboard() {
           <CreditCard className="h-8 w-8" />
           <h1 className="text-3xl font-bold">Cashier Terminal</h1>
         </div>
+
+        {errorMessage && (
+          <div className="mb-6 p-3 text-sm text-red-600 bg-red-50 rounded-md" role="alert">
+            {errorMessage}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Orders List */}
@@ -236,6 +327,20 @@ export default function CashierDashboard() {
                       </div>
                     </div>
 
+                    <div className="space-y-1">
+                      <label htmlFor="discount" className="text-sm font-medium">
+                        Discount ($)
+                      </label>
+                      <Input
+                        id="discount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={discountAmount}
+                        onChange={(e) => setDiscountAmount(Number(e.target.value) || 0)}
+                      />
+                    </div>
+
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Subtotal</span>
@@ -245,6 +350,12 @@ export default function CashierDashboard() {
                         <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
                         <span>${calculateSummary(selectedOrder).tax.toFixed(2)}</span>
                       </div>
+                      {calculateSummary(selectedOrder).discount > 0 && (
+                        <div className="flex justify-between text-sm text-green-700">
+                          <span>Discount</span>
+                          <span>-${calculateSummary(selectedOrder).discount.toFixed(2)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between font-bold text-lg pt-2 border-t">
                         <span>Total</span>
                         <span>${calculateSummary(selectedOrder).total.toFixed(2)}</span>
@@ -291,6 +402,38 @@ export default function CashierDashboard() {
             </Card>
           </div>
         </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Recent Payments</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentPayments.length === 0 ? (
+              <div className="py-4 text-center text-gray-500">No recent payments</div>
+            ) : (
+              <div className="space-y-2">
+                {recentPayments.map((payment) => (
+                  <div key={payment.id} className="flex items-center justify-between p-2 border-b last:border-0">
+                    <span>
+                      Table {payment.order.table.table_number} — $
+                      {Number(payment.total_amount).toFixed(2)}
+                      {payment.payment_status === 'REFUNDED' && (
+                        <Badge variant="outline" className="ml-2">
+                          Refunded
+                        </Badge>
+                      )}
+                    </span>
+                    {payment.payment_status === 'COMPLETED' && (
+                      <Button size="sm" variant="destructive" onClick={() => handleRefund(payment.id)}>
+                        Refund
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
