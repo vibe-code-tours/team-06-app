@@ -1,6 +1,6 @@
 import { ok, err } from '@restaurant-qr/shared/http/apiResponse'
 import { createClient } from '@/lib/supabase/server'
-import { updateRestaurant } from '@/lib/services/restaurantService'
+import { updateRestaurant, deleteRestaurant } from '@/lib/services/restaurantService'
 
 export async function PUT(
     request: Request,
@@ -50,6 +50,35 @@ export async function PUT(
     }
 
     const result = await updateRestaurant(supabase, params.restaurantId, filtered)
+
+    if ('error' in result) return err('CONFLICT', result.error, 422)
+
+    return ok(result, 200)
+}
+
+export async function DELETE(
+    _request: Request,
+    { params }: { params: { restaurantId: string } }
+) {
+    const supabase = createClient()
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) return err('UNAUTHORIZED', 'Unauthorized', 401)
+
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile || profile.role !== 'super_admin') {
+        return err('FORBIDDEN', 'Forbidden', 403)
+    }
+
+    const result = await deleteRestaurant(supabase, params.restaurantId)
 
     if ('error' in result) return err('CONFLICT', result.error, 422)
 
