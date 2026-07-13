@@ -40,10 +40,10 @@ export default function OwnerDashboard() {
     totalStaff: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const supabase = createClient();
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async () => {
       // Get current user's restaurant
       const {
         data: { user },
@@ -105,10 +105,38 @@ export default function OwnerDashboard() {
       }
 
       setLoading(false);
-    };
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const uploadLogo = async (file: File) => {
+    if (!restaurantId) return;
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', 'restaurant-logos');
+    formData.append('restaurantId', restaurantId);
+
+    const uploadResponse = await fetch('/api/uploads', { method: 'POST', body: formData });
+    if (!uploadResponse.ok) {
+      setUploading(false);
+      return;
+    }
+
+    const { publicUrl } = await uploadResponse.json();
+
+    await fetch(`/api/restaurants/${restaurantId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ logo_url: publicUrl }),
+    });
 
     fetchData();
-  }, [supabase]);
+    setUploading(false);
+  };
 
   if (loading) {
     return (
@@ -123,12 +151,32 @@ export default function OwnerDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Store className="h-8 w-8" />
+            {restaurant?.logo_url ? (
+              <img
+                src={restaurant.logo_url}
+                alt={`${restaurant.name} logo`}
+                className="h-12 w-12 rounded object-cover"
+              />
+            ) : (
+              <Store className="h-12 w-12" />
+            )}
             <div>
               <h1 className="text-3xl font-bold">{restaurant?.name || 'My Restaurant'}</h1>
               <p className="text-gray-500">Restaurant Owner Dashboard</p>
             </div>
           </div>
+          <label className="inline-flex">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
+              disabled={uploading}
+            />
+            <span className={`inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              {uploading ? 'Uploading...' : 'Upload Logo'}
+            </span>
+          </label>
         </div>
 
         {/* Stats */}

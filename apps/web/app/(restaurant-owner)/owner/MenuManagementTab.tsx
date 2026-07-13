@@ -19,6 +19,7 @@ export default function MenuManagementTab({ restaurantId }: Props) {
     const [newItemPrice, setNewItemPrice] = useState('')
     const [newItemCategoryId, setNewItemCategoryId] = useState('')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [uploadingItemId, setUploadingItemId] = useState<string | null>(null)
 
     const fetchMenu = async () => {
         const [catRes, itemRes] = await Promise.all([
@@ -144,6 +145,40 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         fetchMenu()
     }
 
+    const uploadItemImage = async (itemId: string, file: File) => {
+        setUploadingItemId(itemId)
+
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('bucket', 'menu-images')
+        formData.append('restaurantId', restaurantId)
+
+        const uploadResponse = await fetch('/api/uploads', { method: 'POST', body: formData })
+        if (!uploadResponse.ok) {
+            setErrorMessage('Failed to upload image')
+            setUploadingItemId(null)
+            return
+        }
+
+        const { publicUrl } = await uploadResponse.json()
+
+        const updateResponse = await fetch(`/api/menu-items/${itemId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_url: publicUrl }),
+        })
+
+        if (!updateResponse.ok) {
+            setErrorMessage('Failed to save image URL')
+            setUploadingItemId(null)
+            return
+        }
+
+        setErrorMessage(null)
+        setUploadingItemId(null)
+        fetchMenu()
+    }
+
     return (
         <Card>
             <CardContent className="pt-6">
@@ -239,11 +274,24 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                 key={item.id}
                                 className="flex items-center justify-between p-2 border rounded"
                             >
-                                <div>
-                                    <span className="font-medium">{item.name}</span>
-                                    <span className="ml-2 text-gray-500">
-                                        ${item.price.toFixed(2)}
-                                    </span>
+                                <div className="flex items-center gap-3">
+                                    {item.image_url ? (
+                                        <img
+                                            src={item.image_url}
+                                            alt={item.name}
+                                            className="h-10 w-10 rounded object-cover"
+                                        />
+                                    ) : (
+                                        <div className="h-10 w-10 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                                            No img
+                                        </div>
+                                    )}
+                                    <div>
+                                        <span className="font-medium">{item.name}</span>
+                                        <span className="ml-2 text-gray-500">
+                                            ${item.price.toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span
@@ -262,6 +310,18 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                     >
                                         Toggle
                                     </Button>
+                                    <label className="inline-flex">
+                                        <input
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/webp"
+                                            className="hidden"
+                                            onChange={(e) => e.target.files?.[0] && uploadItemImage(item.id, e.target.files[0])}
+                                            disabled={uploadingItemId === item.id}
+                                        />
+                                        <span className={`text-xs underline cursor-pointer text-blue-600 ${uploadingItemId === item.id ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                            {uploadingItemId === item.id ? 'Uploading...' : 'Upload image'}
+                                        </span>
+                                    </label>
                                 </div>
                             </div>
                         ))}
