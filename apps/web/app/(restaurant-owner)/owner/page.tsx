@@ -3,16 +3,16 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Store,
   UtensilsCrossed,
   Users,
   BarChart3,
-  Settings,
-  Plus,
 } from 'lucide-react';
+import MenuManagementTab from './MenuManagementTab';
+import TableManagementTab from './TableManagementTab';
+import StaffManagementTab from './StaffManagementTab';
 
 interface Restaurant {
   id: string;
@@ -32,6 +32,7 @@ interface Stats {
 
 export default function OwnerDashboard() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     activeOrders: 0,
@@ -57,6 +58,8 @@ export default function OwnerDashboard() {
         .single();
 
       if (!profile?.restaurant_id) return;
+
+      setRestaurantId(profile.restaurant_id);
 
       // Fetch restaurant details
       const { data: restaurantData } = await supabase
@@ -126,10 +129,6 @@ export default function OwnerDashboard() {
               <p className="text-gray-500">Restaurant Owner Dashboard</p>
             </div>
           </div>
-          <Button>
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
         </div>
 
         {/* Stats */}
@@ -196,62 +195,17 @@ export default function OwnerDashboard() {
 
           {/* Menu Management */}
           <TabsContent value="menu">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Menu Items</CardTitle>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Item
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 text-center py-8">
-                  Menu management coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            {restaurantId && <MenuManagementTab restaurantId={restaurantId} />}
           </TabsContent>
 
           {/* Table Management */}
           <TabsContent value="tables">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Tables</CardTitle>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Table
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 text-center py-8">
-                  Table management coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            {restaurantId && <TableManagementTab restaurantId={restaurantId} />}
           </TabsContent>
 
           {/* Staff Management */}
           <TabsContent value="staff">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Staff Members</CardTitle>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Invite Staff
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 text-center py-8">
-                  Staff management coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            {restaurantId && <StaffManagementTab restaurantId={restaurantId} />}
           </TabsContent>
         </Tabs>
       </div>
