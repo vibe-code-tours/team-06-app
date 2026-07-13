@@ -7,7 +7,7 @@ export async function POST(
     request: Request,
     { params }: { params: { orderId: string } }
 ) {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const {
         data: { user },
