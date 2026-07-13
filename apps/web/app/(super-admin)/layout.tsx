@@ -1,4 +1,4 @@
-import Header from '@/components/header'
+import Header from '@/components/ui/header'
 
 export default function SuperAdminLayout({
     children,
