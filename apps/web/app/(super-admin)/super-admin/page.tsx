@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Store } from 'lucide-react';
+import RestaurantFormDialog from './RestaurantFormDialog';
 
 interface Restaurant {
   id: string;
@@ -21,28 +22,31 @@ export default function SuperAdminDashboard() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [userCount, setUserCount] = useState<UserCount>({ total: 0 });
   const [loading, setLoading] = useState(true);
+  const [dialogState, setDialogState] = useState<
+    { mode: 'create' } | { mode: 'edit'; restaurant: Restaurant } | null
+  >(null);
   const supabase = createClient();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [restaurantsResult, usersResult] = await Promise.all([
-        supabase.from('restaurants').select('*').order('created_at', { ascending: false }),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }),
-      ]);
+  const fetchData = useCallback(async () => {
+    const [restaurantsResult, usersResult] = await Promise.all([
+      supabase.from('restaurants').select('*').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    ]);
 
-      if (restaurantsResult.data) {
-        setRestaurants(restaurantsResult.data);
-      }
+    if (restaurantsResult.data) {
+      setRestaurants(restaurantsResult.data);
+    }
 
-      if (usersResult.count) {
-        setUserCount({ total: usersResult.count });
-      }
+    if (usersResult.count) {
+      setUserCount({ total: usersResult.count });
+    }
 
-      setLoading(false);
-    };
-
-    fetchData();
+    setLoading(false);
   }, [supabase]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -53,7 +57,7 @@ export default function SuperAdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Super Admin Dashboard</h1>
 
@@ -100,7 +104,7 @@ export default function SuperAdminDashboard() {
                 <CardTitle>Restaurants</CardTitle>
                 <CardDescription>Manage all restaurants in the system</CardDescription>
               </div>
-              <Button>Add Restaurant</Button>
+              <Button onClick={() => setDialogState({ mode: 'create' })}>Add Restaurant</Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -112,7 +116,7 @@ export default function SuperAdminDashboard() {
                 >
                   <div>
                     <h3 className="font-medium">{restaurant.name}</h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       Created: {new Date(restaurant.created_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -120,13 +124,17 @@ export default function SuperAdminDashboard() {
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
                         restaurant.is_active
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-900/50 text-green-300'
+                          : 'bg-red-900/50 text-red-300'
                       }`}
                     >
                       {restaurant.is_active ? 'Active' : 'Inactive'}
                     </span>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDialogState({ mode: 'edit', restaurant })}
+                    >
                       Edit
                     </Button>
                   </div>
@@ -135,6 +143,18 @@ export default function SuperAdminDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {dialogState && (
+          <RestaurantFormDialog
+            mode={dialogState.mode}
+            restaurant={dialogState.mode === 'edit' ? dialogState.restaurant : undefined}
+            onSaved={() => {
+              setDialogState(null);
+              fetchData();
+            }}
+            onClose={() => setDialogState(null)}
+          />
+        )}
       </div>
     </div>
   );
