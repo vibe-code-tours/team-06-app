@@ -30,27 +30,27 @@ interface Order {
 
 const statusConfig: Record<string, { bg: string; text: string; glow: string; icon: React.ReactNode }> = {
   PENDING: {
-    bg: 'bg-yellow-500/10',
-    text: 'text-yellow-400',
-    glow: 'shadow-[0_0_15px_rgba(234,179,8,0.2)]',
+    bg: 'bg-yellow-100',
+    text: 'text-yellow-700',
+    glow: 'shadow-[0_0_15px_rgba(234,179,8,0.12)]',
     icon: <Clock className="h-4 w-4" />,
   },
   ACCEPTED: {
-    bg: 'bg-blue-500/10',
-    text: 'text-blue-400',
-    glow: 'shadow-[0_0_15px_rgba(59,130,246,0.2)]',
+    bg: 'bg-blue-100',
+    text: 'text-blue-700',
+    glow: 'shadow-[0_0_15px_rgba(59,130,246,0.12)]',
     icon: <CheckCircle className="h-4 w-4" />,
   },
   PREPARING: {
-    bg: 'bg-orange-500/10',
-    text: 'text-orange-400',
-    glow: 'shadow-[0_0_20px_rgba(254,116,15,0.3)]',
+    bg: 'bg-orange-100',
+    text: 'text-orange-700',
+    glow: 'shadow-[0_0_20px_rgba(254,116,15,0.15)]',
     icon: <Flame className="h-4 w-4" />,
   },
   READY: {
-    bg: 'bg-green-500/10',
-    text: 'text-green-400',
-    glow: 'shadow-[0_0_15px_rgba(34,197,94,0.2)]',
+    bg: 'bg-green-100',
+    text: 'text-green-700',
+    glow: 'shadow-[0_0_15px_rgba(34,197,94,0.12)]',
     icon: <CheckCircle className="h-4 w-4" />,
   },
 };
@@ -131,7 +131,7 @@ export default function KitchenDashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-orange border-t-transparent"></div>
-          <p className="text-white/60 text-sm">Loading orders...</p>
+          <p className="text-gray-500 text-sm">Loading orders...</p>
         </div>
       </div>
     );
@@ -143,12 +143,12 @@ export default function KitchenDashboard() {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-brand-orange/20 rounded-xl animate-pulse-glow">
+              <div className="p-3 bg-brand-orange/10 rounded-xl animate-pulse-glow">
                 <ChefHat className="h-8 w-8 text-brand-orange" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white tracking-tight">Kitchen Display</h1>
-                <p className="text-white/50 text-sm mt-1">
+                <h1 className="text-3xl font-bold text-brand-blue tracking-tight">Kitchen Display</h1>
+                <p className="text-gray-500 text-sm mt-1">
                   {orders.length} active order{orders.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -157,20 +157,20 @@ export default function KitchenDashboard() {
 
           {/* Error message */}
           {errorMessage && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3 animate-slide-up" role="alert">
-              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0" />
-              <p className="text-red-300 text-sm">{errorMessage}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 animate-slide-up" role="alert">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <p className="text-red-600 text-sm">{errorMessage}</p>
             </div>
           )}
 
           {/* Orders grid */}
           {orders.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <div className="p-6 bg-[#091A30] border border-white/[0.12] rounded-2xl mb-4 shadow-lg shadow-black/20">
-                <ChefHat className="h-16 w-16 text-white/30" />
+              <div className="p-6 bg-white border border-black/[0.06] rounded-2xl mb-4 shadow-sm">
+                <ChefHat className="h-16 w-16 text-gray-300" />
               </div>
-              <p className="text-white/50 text-lg">No pending orders</p>
-              <p className="text-white/30 text-sm mt-1">New orders will appear here</p>
+              <p className="text-gray-500 text-lg">No pending orders</p>
+              <p className="text-gray-400 text-sm mt-1">New orders will appear here</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -179,7 +179,7 @@ export default function KitchenDashboard() {
                 return (
                   <div
                     key={order.id}
-                    className={`group relative bg-[#091A30] backdrop-blur-sm border border-white/[0.12] rounded-2xl overflow-hidden hover:border-white/[0.2] transition-all duration-300 hover:scale-[1.02] shadow-lg shadow-black/20 ${config.glow} animate-slide-up`}
+                    className={`group relative bg-white border border-black/[0.06] rounded-2xl overflow-hidden hover:border-black/[0.12] transition-all duration-300 hover:scale-[1.02] shadow-sm ${config.glow} animate-slide-up`}
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
                     {/* Status indicator bar */}
@@ -189,11 +189,11 @@ export default function KitchenDashboard() {
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div>
-                          <h3 className="text-xl font-bold text-white">
+                          <h3 className="text-xl font-bold text-brand-blue">
                             Table {order.table.table_number}
                           </h3>
                           {order.table.name && (
-                            <p className="text-white/40 text-xs mt-0.5">{order.table.name}</p>
+                            <p className="text-gray-400 text-xs mt-0.5">{order.table.name}</p>
                           )}
                         </div>
                         <Badge className={`${config.bg} ${config.text} border-0 px-3 py-1.5 font-medium`}>
@@ -205,21 +205,21 @@ export default function KitchenDashboard() {
                       </div>
 
                       {/* Time */}
-                      <div className="flex items-center gap-2 text-white/40 text-xs mb-4">
+                      <div className="flex items-center gap-2 text-gray-400 text-xs mb-4">
                         <Clock className="h-3.5 w-3.5" />
                         {new Date(order.created_at).toLocaleTimeString()}
                       </div>
 
                       {/* Order items */}
-                      <div className="space-y-2 mb-4 pb-4 border-b border-white/[0.06]">
+                      <div className="space-y-2 mb-4 pb-4 border-b border-black/[0.06]">
                         {order.order_items.map((item) => (
                           <div key={item.id} className="flex justify-between items-start text-sm">
-                            <span className="text-white/80">
+                            <span className="text-gray-700">
                               <span className="text-brand-orange font-medium">{item.quantity}x</span>{' '}
                               {item.menu_item.name}
                             </span>
                             {item.special_instructions && (
-                              <span className="text-brand-orange/70 text-xs ml-2 italic">
+                              <span className="text-brand-orange/80 text-xs ml-2 italic">
                                 {item.special_instructions}
                               </span>
                             )}
@@ -229,8 +229,8 @@ export default function KitchenDashboard() {
 
                       {/* Special instructions */}
                       {order.special_instructions && (
-                        <div className="mb-4 p-3 bg-brand-orange/10 border border-brand-orange/20 rounded-lg">
-                          <p className="text-brand-orange/80 text-sm">{order.special_instructions}</p>
+                        <div className="mb-4 p-3 bg-brand-orange/[0.08] border border-brand-orange/20 rounded-lg">
+                          <p className="text-brand-orange text-sm">{order.special_instructions}</p>
                         </div>
                       )}
 
@@ -238,7 +238,7 @@ export default function KitchenDashboard() {
                       <div className="space-y-2">
                         {nextStatus[order.status] && (
                           <Button
-                            className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold py-5 rounded-xl transition-all duration-200 hover:shadow-[0_0_20px_rgba(254,116,15,0.4)]"
+                            className="w-full bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold py-5 rounded-xl transition-all duration-200 hover:shadow-[0_0_20px_rgba(254,116,15,0.3)]"
                             onClick={() => updateOrderStatus(order.id, nextStatus[order.status])}
                             aria-label={`Mark order as ${nextStatus[order.status]}`}
                           >
@@ -250,7 +250,7 @@ export default function KitchenDashboard() {
                         {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
                           <Button
                             variant="ghost"
-                            className="w-full text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                            className="w-full text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
                             onClick={() => setRejectingOrderId(order.id)}
                             aria-label="Reject order"
                           >
@@ -276,26 +276,26 @@ export default function KitchenDashboard() {
           />
 
           {/* Dialog */}
-          <div className="relative bg-[#091A30] border border-white/[0.15] rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-slide-up">
+          <div className="relative bg-white border border-black/[0.08] rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-slide-up">
             <button
               onClick={() => setRejectingOrderId(null)}
-              className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center p-3 bg-red-500/20 rounded-xl mb-4">
-                <AlertCircle className="h-8 w-8 text-red-400" />
+              <div className="inline-flex items-center justify-center p-3 bg-red-50 rounded-xl mb-4">
+                <AlertCircle className="h-8 w-8 text-red-500" />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Reject Order?</h3>
-              <p className="text-white/60 text-sm mb-6">
+              <h3 className="text-lg font-semibold text-brand-blue mb-2">Reject Order?</h3>
+              <p className="text-gray-500 text-sm mb-6">
                 This order will be cancelled and removed from the queue. This action cannot be undone.
               </p>
               <div className="flex gap-3">
                 <Button
                   variant="ghost"
-                  className="flex-1 text-white/60 hover:text-white hover:bg-white/10"
+                  className="flex-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                   onClick={() => setRejectingOrderId(null)}
                 >
                   Cancel
