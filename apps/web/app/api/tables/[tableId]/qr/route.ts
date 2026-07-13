@@ -6,7 +6,7 @@ export async function GET(
   request: Request,
   { params }: { params: { tableId: string } }
 ) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
