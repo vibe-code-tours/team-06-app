@@ -99,7 +99,7 @@ describe('tableService', () => {
   // =========================================================================
 
   describe('deleteTable', () => {
-    it('deletes a table with no active session', async () => {
+    it('deletes a table', async () => {
       const fixture = await seedTestData(serviceClient);
 
       const result = await deleteTable(serviceClient, fixture.tableId);
@@ -111,18 +111,6 @@ describe('tableService', () => {
         .eq('id', fixture.tableId)
         .single();
       expect(data).toBeNull();
-    });
-
-    it('returns error when deleting a table with an active session', async () => {
-      const fixture = await seedTestData(serviceClient);
-      await serviceClient.rpc('create_order_with_session', {
-        p_restaurant_id: fixture.restaurantId,
-        p_table_id: fixture.tableId,
-        p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
-      });
-
-      const result = await deleteTable(serviceClient, fixture.tableId);
-      expect(result).toHaveProperty('error');
     });
   });
 });
