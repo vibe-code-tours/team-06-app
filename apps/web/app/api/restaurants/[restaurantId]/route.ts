@@ -32,11 +32,24 @@ export async function PUT(
 
     const body = await request.json().catch(() => null)
 
-    if (!body || typeof body !== 'object') {
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
         return err('VALIDATION_ERROR', 'Invalid request body', 400)
     }
 
-    const result = await updateRestaurant(supabase, params.restaurantId, body)
+    // Allowlist: only these fields can be updated via this route
+    const ALLOWED_FIELDS = ['name', 'description', 'phone', 'email', 'address', 'tax_rate', 'is_active', 'logo_url'] as const
+    const filtered: Record<string, unknown> = {}
+    for (const key of ALLOWED_FIELDS) {
+        if (key in body) {
+            filtered[key] = body[key]
+        }
+    }
+
+    if (Object.keys(filtered).length === 0) {
+        return err('VALIDATION_ERROR', 'No valid fields to update', 400)
+    }
+
+    const result = await updateRestaurant(supabase, params.restaurantId, filtered)
 
     if ('error' in result) return err('CONFLICT', result.error, 422)
 

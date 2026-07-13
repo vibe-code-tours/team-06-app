@@ -112,3 +112,97 @@ describe('POST /api/restaurants', () => {
         expect(body.data.id).toBeDefined()
     })
 })
+
+describe('PUT /api/restaurants/[restaurantId]', () => {
+    const serviceClient = createServiceClient()
+
+    beforeEach(() => resetDatabase(serviceClient), 60_000)
+
+    it('rejects an unauthenticated request with 307', async () => {
+        const fixture = await seedTestData(serviceClient)
+
+        const response = await fetch(
+            `${BASE_URL}/api/restaurants/${fixture.restaurantId}`,
+            {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'Updated' }),
+                redirect: 'manual',
+            }
+        )
+
+        expect(response.status).toBe(307)
+    })
+
+    it('rejects a manager with 403', async () => {
+        const fixture = await seedTestData(serviceClient)
+        const managerClient = await createRoleClient(
+            fixture.profiles.manager.email,
+            fixture.profiles.manager.password
+        )
+        const cookie = await buildAuthCookie(managerClient)
+
+        const response = await fetch(
+            `${BASE_URL}/api/restaurants/${fixture.restaurantId}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Cookie: cookie,
+                },
+                body: JSON.stringify({ name: 'Should Fail' }),
+                redirect: 'manual',
+            }
+        )
+
+        expect(response.status).toBe(403)
+    })
+
+    it('allows super_admin to update a restaurant', async () => {
+        const fixture = await seedTestData(serviceClient)
+        const adminClient = await createRoleClient(
+            fixture.profiles.super_admin.email,
+            fixture.profiles.super_admin.password
+        )
+        const cookie = await buildAuthCookie(adminClient)
+
+        const response = await fetch(
+            `${BASE_URL}/api/restaurants/${fixture.restaurantId}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Cookie: cookie,
+                },
+                body: JSON.stringify({ name: 'Updated Name' }),
+                redirect: 'manual',
+            }
+        )
+
+        expect(response.status).toBe(200)
+    })
+
+    it('rejects unknown fields with 400', async () => {
+        const fixture = await seedTestData(serviceClient)
+        const adminClient = await createRoleClient(
+            fixture.profiles.super_admin.email,
+            fixture.profiles.super_admin.password
+        )
+        const cookie = await buildAuthCookie(adminClient)
+
+        const response = await fetch(
+            `${BASE_URL}/api/restaurants/${fixture.restaurantId}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Cookie: cookie,
+                },
+                body: JSON.stringify({ evil_column: 'hack' }),
+                redirect: 'manual',
+            }
+        )
+
+        expect(response.status).toBe(400)
+    })
+})

@@ -50,7 +50,7 @@ describe('restaurantService', () => {
 
         const result = await updateRestaurant(serviceClient, created.id, {
             logo_url: 'https://example.app/logo.png',
-        } as any) // eslint-disable-line @typescript-eslint/no-explicit-any -- logo_url is outside RestaurantInput but a valid restaurants column
+        })
 
         expect(result).toEqual({ success: true })
     })

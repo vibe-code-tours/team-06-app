@@ -4,12 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
-interface Restaurant {
-    id: string
-    name: string
-    is_active: boolean
-}
+import type { Restaurant } from '@restaurant-qr/shared'
 
 interface RestaurantFormDialogProps {
     mode: 'create' | 'edit'
@@ -32,6 +27,12 @@ export default function RestaurantFormDialog({
     const save = async () => {
         setSaving(true)
 
+        if (mode === 'edit' && !restaurant) {
+            setErrorMessage('No restaurant selected')
+            setSaving(false)
+            return
+        }
+
         const url =
             mode === 'create'
                 ? '/api/restaurants'
@@ -51,8 +52,12 @@ export default function RestaurantFormDialog({
         })
 
         if (!response.ok) {
-            const { error } = await response.json()
-            setErrorMessage(error?.message ?? 'Failed to save restaurant')
+            try {
+                const { error } = await response.json()
+                setErrorMessage(error?.message ?? 'Failed to save restaurant')
+            } catch {
+                setErrorMessage('Failed to save restaurant')
+            }
             setSaving(false)
             return
         }
@@ -79,8 +84,11 @@ export default function RestaurantFormDialog({
                         </div>
                     )}
                     <div>
-                        <label className="text-sm font-medium">Name</label>
+                        <label htmlFor="restaurant-name" className="text-sm font-medium">
+                            Name
+                        </label>
                         <Input
+                            id="restaurant-name"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />

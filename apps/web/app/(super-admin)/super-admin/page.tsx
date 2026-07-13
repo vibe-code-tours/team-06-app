@@ -6,13 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Store } from 'lucide-react';
 import RestaurantFormDialog from './RestaurantFormDialog';
-
-interface Restaurant {
-  id: string;
-  name: string;
-  is_active: boolean;
-  created_at: string;
-}
+import type { Restaurant } from '@restaurant-qr/shared';
 
 interface UserCount {
   total: number;
@@ -25,9 +19,8 @@ export default function SuperAdminDashboard() {
   const [dialogState, setDialogState] = useState<
     { mode: 'create' } | { mode: 'edit'; restaurant: Restaurant } | null
   >(null);
-  const supabase = createClient();
-
   const fetchData = useCallback(async () => {
+    const supabase = createClient();
     const [restaurantsResult, usersResult] = await Promise.all([
       supabase.from('restaurants').select('*').order('created_at', { ascending: false }),
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
@@ -42,7 +35,7 @@ export default function SuperAdminDashboard() {
     }
 
     setLoading(false);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     fetchData();
