@@ -36,10 +36,9 @@ describe('staffService', () => {
     it('returns error for invalid role', async () => {
         const fixture = await seedTestData(serviceClient)
 
-        const result = await inviteStaff(serviceClient, fixture.restaurantId, {
-            email: 'valid@test.local',
-            role: 'invalid_role',
-        })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const invalidInput: any = { email: 'valid@test.local', role: 'invalid_role' }
+        const result = await inviteStaff(serviceClient, fixture.restaurantId, invalidInput)
 
         expect(result).toHaveProperty('error')
     })

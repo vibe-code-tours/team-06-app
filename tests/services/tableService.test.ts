@@ -68,7 +68,7 @@ describe('tableService', () => {
       const result = await createTable(
         serviceClient,
         fixture.restaurantId,
-        { table_number: 99, capacity: 6 },
+        { table_number: 99, capacity: 6, is_active: true },
         'https://example.app'
       );
 
@@ -86,7 +86,7 @@ describe('tableService', () => {
       const result = await createTable(
         serviceClient,
         fixture.restaurantId,
-        { table_number: 1 }, // fixture already has table 1
+        { table_number: 1, capacity: 4, is_active: true }, // fixture already has table 1
         'https://example.app'
       );
 

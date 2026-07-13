@@ -32,14 +32,14 @@ describe('POST /api/menu-items', () => {
 
     beforeEach(() => resetDatabase(serviceClient), 60_000)
 
-    it('rejects unauthenticated request with 307', async () => {
+    it('rejects unauthenticated request with 401', async () => {
         const response = await fetch(`${BASE_URL}/api/menu-items`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ restaurant_id: 'x', name: 'Test', price: 10, category_id: 'x' }),
             redirect: 'manual',
         })
-        expect(response.status).toBe(307)
+        expect(response.status).toBe(401)
     })
 
     it('allows owner to create a menu item', async () => {

@@ -70,7 +70,11 @@ describe('POST /api/staff/invite', () => {
         const response = await fetch(`${BASE_URL}/api/staff/invite`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Cookie: cookie },
-            body: JSON.stringify({ email: 'invited-admin@test.local', role: 'manager' }),
+            body: JSON.stringify({
+                email: 'invited-admin@test.local',
+                role: 'manager',
+                restaurant_id: fixture.restaurantId,
+            }),
             redirect: 'manual',
         })
         expect(response.status).toBe(201)

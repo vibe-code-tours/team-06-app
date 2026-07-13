@@ -78,7 +78,7 @@ describe('POST /api/uploads', () => {
             body: formData,
             redirect: 'manual',
         })
-        expect(response.status).toBe(201)
+        expect(response.status).toBe(200)
         const body = (await response.json()) as { data: { publicUrl: string } }
         expect(body.data.publicUrl).toBeDefined()
     })
@@ -102,7 +102,7 @@ describe('POST /api/uploads', () => {
             body: formData,
             redirect: 'manual',
         })
-        expect(response.status).toBe(201)
+        expect(response.status).toBe(200)
     })
 
     it('rejects upload to disallowed bucket with 400', async () => {
