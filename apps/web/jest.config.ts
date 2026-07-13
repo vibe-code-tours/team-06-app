@@ -4,10 +4,11 @@ const config: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     rootDir: '../..',
-    testMatch: ['<rootDir>/tests/**/*.test.ts', '<rootDir>/apps/web/**/*.test.ts'],
+    testMatch: ['<rootDir>/tests/**/*.test.ts', '<rootDir>/tests/**/*.test.tsx', '<rootDir>/apps/web/**/*.test.ts', '<rootDir>/apps/web/**/*.test.tsx'],
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/apps/web/$1',
         '^@restaurant-qr/shared$': '<rootDir>/packages/shared/src',
+        '^@restaurant-qr/shared/(.*)$': '<rootDir>/packages/shared/src/$1',
     },
     setupFiles: ['<rootDir>/apps/web/jest.setup.ts'],
     // Integration tests hit a real Supabase instance; auth user CRUD + seeding
