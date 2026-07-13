@@ -65,6 +65,10 @@ jobs:
           } > supabase/.env.test
 
       # ---------- Next.js Dev Server for Integration Tests ----------
+      - name: Build shared package
+        if: ${{ hashFiles('packages/shared/package.json') != '' }}
+        run: npm run build --workspace=packages/shared
+
       - name: Start Next.js dev server
         if: ${{ hashFiles('apps/web/package.json') != '' }}
         run: |
