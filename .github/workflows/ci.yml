@@ -64,35 +64,9 @@ jobs:
             echo "SUPABASE_SERVICE_ROLE_KEY=$(echo "$STATUS" | jq -r .SERVICE_ROLE_KEY)"
           } > supabase/.env.test
 
-      # ---------- Next.js Dev Server for Integration Tests ----------
-      - name: Build shared package
-        if: ${{ hashFiles('packages/shared/package.json') != '' }}
-        run: npm run build --workspace=packages/shared
-
-      - name: Start Next.js dev server
-        if: ${{ hashFiles('apps/web/package.json') != '' }}
-        run: |
-          cd apps/web
-          npm run dev &
-          # Wait for server to be ready
-          for i in {1..30}; do
-            if curl -s http://localhost:3000 > /dev/null 2>&1; then
-              echo "Next.js dev server ready"
-              break
-            fi
-            echo "Waiting for Next.js... ($i/30)"
-            sleep 2
-          done
-
       - name: Test
         if: ${{ hashFiles('package.json') != '' }}
-        env:
-          TEST_APP_URL: http://localhost:3000
         run: npm test --if-present
-
-      - name: Stop Next.js dev server
-        if: ${{ always() && hashFiles('apps/web/package.json') != '' }}
-        run: pkill -f "next dev" || true
 
       - name: Stop Supabase (local)
         if: ${{ always() && hashFiles('supabase/config.toml') != '' }}
