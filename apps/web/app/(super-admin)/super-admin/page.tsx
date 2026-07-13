@@ -63,15 +63,13 @@ export default function SuperAdminDashboard() {
 
       if (restaurantError) throw restaurantError;
 
-      // Cascade: if deactivating, also deactivate all profiles for this restaurant
-      if (!newIsActive) {
-        const { error: profilesError } = await supabase
-          .from('profiles')
-          .update({ is_active: false })
-          .eq('restaurant_id', restaurant.id);
+      // Cascade: update all profiles for this restaurant
+      const { error: profilesError } = await supabase
+        .from('profiles')
+        .update({ is_active: newIsActive })
+        .eq('restaurant_id', restaurant.id);
 
-        if (profilesError) throw profilesError;
-      }
+      if (profilesError) throw profilesError;
 
       setTogglingId(null);
     } catch {
