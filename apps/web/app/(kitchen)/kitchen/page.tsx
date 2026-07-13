@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRealtimeWithPolling } from '@/hooks/useRealtimeWithPolling';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,10 @@ export default function KitchenDashboard() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [rejectingOrderId, setRejectingOrderId] = useState<string | null>(null);
   const supabase = createClient();
+  // Tracks order IDs that have already played their entrance animation, so a
+  // status-change refetch doesn't replay slide-up on the whole grid — only
+  // genuinely new orders animate in.
+  const animatedOrderIds = useRef<Set<string>>(new Set());
 
   const fetchOrders = async () => {
     const { data, error } = await supabase
@@ -90,6 +94,12 @@ export default function KitchenDashboard() {
     if (error) {
       setErrorMessage(error.message);
     } else if (data) {
+      const liveIds = new Set(data.map((order) => order.id));
+      for (const id of animatedOrderIds.current) {
+        if (!liveIds.has(id)) {
+          animatedOrderIds.current.delete(id);
+        }
+      }
       setOrders(data as unknown as Order[]);
       setErrorMessage(null);
     }
@@ -121,9 +131,7 @@ export default function KitchenDashboard() {
     }
 
     setErrorMessage(null);
-    setOrders((current) =>
-      current.filter((order) => order.id !== orderId || newStatus === 'READY')
-    );
+    fetchOrders();
   };
 
   if (loading) {
@@ -176,11 +184,15 @@ export default function KitchenDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {orders.map((order, index) => {
                 const config = statusConfig[order.status] || statusConfig.PENDING;
+                const isNew = !animatedOrderIds.current.has(order.id);
+                if (isNew) {
+                  animatedOrderIds.current.add(order.id);
+                }
                 return (
                   <div
                     key={order.id}
-                    className={`group relative bg-white border border-black/[0.06] rounded-2xl overflow-hidden hover:border-black/[0.12] transition-all duration-300 hover:scale-[1.02] shadow-sm ${config.glow} animate-slide-up`}
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className={`group relative bg-white border border-black/[0.06] rounded-2xl overflow-hidden hover:border-black/[0.12] transition-all duration-300 hover:scale-[1.02] shadow-sm ${config.glow} ${isNew ? 'animate-slide-up' : ''}`}
+                    style={isNew ? { animationDelay: `${index * 50}ms` } : undefined}
                   >
                     {/* Status indicator bar */}
                     <div className={`h-1 ${config.bg}`} style={{ background: `linear-gradient(90deg, transparent, currentColor, transparent)` }} />

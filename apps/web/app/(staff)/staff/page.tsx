@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,10 +28,19 @@ interface Order {
 }
 
 const tableStatusColors: Record<string, string> = {
-  AVAILABLE: 'bg-green-100 text-green-800',
+  AVAILABLE: 'bg-green-50 text-green-700',
   OCCUPIED: 'bg-blue-100 text-blue-800',
   WAITING_PAYMENT: 'bg-yellow-100 text-yellow-800',
   CLEANING: 'bg-gray-100 text-gray-800',
+};
+
+const orderStatusColors: Record<string, string> = {
+  PENDING: 'bg-yellow-100 text-yellow-800',
+  ACCEPTED: 'bg-blue-100 text-blue-800',
+  PREPARING: 'bg-orange-100 text-orange-800',
+  READY: 'bg-green-50 text-green-700',
+  COMPLETED: 'bg-gray-100 text-gray-800',
+  CANCELLED: 'bg-red-100 text-red-800',
 };
 
 export default function StaffDashboard() {
@@ -269,7 +277,9 @@ export default function StaffDashboard() {
                             {new Date(order.created_at).toLocaleTimeString()}
                           </div>
                         </div>
-                        <Badge>{order.status}</Badge>
+                        <Badge className={orderStatusColors[order.status]}>
+                          {order.status}
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
@@ -300,9 +310,9 @@ export default function StaffDashboard() {
                             {new Date(order.created_at).toLocaleTimeString()}
                           </div>
                         </div>
-                        <Link href={`/cashier?order=${order.id}`}>
-                          <Button size="sm">Process Payment</Button>
-                        </Link>
+                        <Badge className="bg-yellow-100 text-yellow-800">
+                          WAITING_PAYMENT
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>

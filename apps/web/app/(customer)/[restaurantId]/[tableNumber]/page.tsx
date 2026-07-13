@@ -51,6 +51,7 @@ export default function CustomerMenuPage() {
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [tableOccupied, setTableOccupied] = useState(false);
   const [tableId, setTableId] = useState<string | null>(null);
   const supabase = createClient();
 
@@ -177,10 +178,19 @@ export default function CustomerMenuPage() {
     });
 
     if (error) {
-      setErrorMessage(error.message);
+      if (error.message.includes('active session already exists')) {
+        setTableOccupied(true);
+        setErrorMessage(
+          'This table already has an order in progress. Please ask staff to bring your bill before placing a new order.'
+        );
+      } else {
+        setTableOccupied(false);
+        setErrorMessage(error.message);
+      }
     } else {
       setOrderPlaced(true);
       setCart([]);
+      setTableOccupied(false);
       setErrorMessage(null);
     }
 
@@ -356,7 +366,14 @@ export default function CustomerMenuPage() {
               <span className="font-bold">${getCartTotal().toFixed(2)}</span>
             </div>
             {errorMessage && (
-              <div className="mb-3 p-3 text-sm text-red-600 bg-red-50 rounded-md" role="alert">
+              <div
+                className={`mb-3 p-3 text-sm rounded-md ${
+                  tableOccupied
+                    ? 'text-amber-800 bg-amber-50 border border-amber-200'
+                    : 'text-red-600 bg-red-50'
+                }`}
+                role="alert"
+              >
                 {errorMessage}
               </div>
             )}

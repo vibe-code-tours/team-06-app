@@ -179,9 +179,6 @@ export default function OrderTracker({ restaurantId, tableId, onStartNewOrder }:
           </Card>
         )}
 
-        <Button className="w-full min-h-[44px]" variant="outline" onClick={onStartNewOrder}>
-          Order More Items
-        </Button>
       </div>
     </div>
   );
