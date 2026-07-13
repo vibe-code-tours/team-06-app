@@ -14,7 +14,7 @@ import { useRealtimeWithPolling } from "@/hooks/useRealtimeWithPolling";
 import { createClient } from "@/lib/supabase/client";
 import { CreditCard, DollarSign, Smartphone } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 interface OrderItem {
   id: string;
@@ -58,7 +58,7 @@ interface RefundTarget {
   amount: number;
 }
 
-export default function CashierDashboard() {
+function CashierDashboardContent() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -560,5 +560,19 @@ export default function CashierDashboard() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function CashierDashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      }
+    >
+      <CashierDashboardContent />
+    </Suspense>
   );
 }
