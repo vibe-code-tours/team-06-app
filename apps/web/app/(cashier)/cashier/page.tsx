@@ -16,6 +16,21 @@ import { CreditCard, DollarSign, Smartphone } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
+const orderStatusColors: Record<string, string> = {
+  PENDING: "bg-yellow-100 text-yellow-800",
+  ACCEPTED: "bg-blue-100 text-blue-800",
+  PREPARING: "bg-orange-100 text-orange-800",
+  READY: "bg-green-100 text-green-800",
+  COMPLETED: "bg-gray-100 text-gray-800",
+  CANCELLED: "bg-red-100 text-red-800",
+};
+
+const paymentStatusColors: Record<string, string> = {
+  UNPAID: "bg-yellow-100 text-yellow-800",
+  COMPLETED: "bg-green-100 text-green-800",
+  REFUNDED: "bg-red-100 text-red-800",
+};
+
 interface OrderItem {
   id: string;
   quantity: number;
@@ -312,7 +327,9 @@ function CashierDashboardContent() {
                           <div className="font-bold">
                             ${summary.total.toFixed(2)}
                           </div>
-                          <Badge variant="outline">{order.status}</Badge>
+                          <Badge className={orderStatusColors[order.status]}>
+                            {order.status}
+                          </Badge>
                         </div>
                       </div>
                     </div>
@@ -530,7 +547,7 @@ function CashierDashboardContent() {
                       Table {payment.order.table.table_number} — $
                       {Number(payment.total_amount).toFixed(2)}
                       {payment.payment_status === "REFUNDED" && (
-                        <Badge variant="outline" className="ml-2">
+                        <Badge className={paymentStatusColors["REFUNDED"]}>
                           Refunded
                         </Badge>
                       )}
