@@ -21,13 +21,15 @@ export default function SuperAdminDashboard() {
   >(null);
   const fetchData = useCallback(async () => {
     const supabase = createClient();
-    const [restaurantsResult, usersResult] = await Promise.all([
-      supabase.from('restaurants').select('*').order('created_at', { ascending: false }),
+
+    const [restaurantsResponse, usersResult] = await Promise.all([
+      fetch('/api/restaurants'),
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
     ]);
 
-    if (restaurantsResult.data) {
-      setRestaurants(restaurantsResult.data);
+    if (restaurantsResponse.ok) {
+      const { data } = await restaurantsResponse.json();
+      setRestaurants(data);
     }
 
     if (usersResult.count) {
@@ -36,6 +38,20 @@ export default function SuperAdminDashboard() {
 
     setLoading(false);
   }, []);
+
+  const handleDelete = async (restaurantId: string, restaurantName: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${restaurantName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    const response = await fetch(`/api/restaurants/${restaurantId}`, {
+      method: 'DELETE',
+    });
+
+    if (response.ok) {
+      fetchData();
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -129,6 +145,13 @@ export default function SuperAdminDashboard() {
                       onClick={() => setDialogState({ mode: 'edit', restaurant })}
                     >
                       Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(restaurant.id, restaurant.name)}
+                    >
+                      Delete
                     </Button>
                   </div>
                 </div>

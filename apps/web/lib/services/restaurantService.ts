@@ -21,3 +21,12 @@ export async function updateRestaurant(
     if (error) return { error: error.message }
     return { success: true }
 }
+
+export async function deleteRestaurant(
+    client: SupabaseClient,
+    restaurantId: string
+): Promise<ServiceResult<{ success: true }>> {
+    const { error } = await client.from('restaurants').delete().eq('id', restaurantId)
+    if (error) return { error: error.message }
+    return { success: true }
+}
