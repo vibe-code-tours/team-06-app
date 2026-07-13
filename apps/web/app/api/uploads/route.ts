@@ -1,8 +1,8 @@
 import { ok, err } from '@restaurant-qr/shared/http/apiResponse'
 import { createClient } from '@/lib/supabase/server'
 
-const ALLOWED_ROLES = ['restaurant_owner', 'manager', 'super_admin']
 const ALLOWED_BUCKETS = ['restaurant-logos', 'menu-images'] as const
+const ALLOWED_ROLES = ['restaurant_owner', 'manager', 'super_admin']
 
 export async function POST(request: Request) {
     const supabase = createClient()
@@ -23,38 +23,32 @@ export async function POST(request: Request) {
         return err('FORBIDDEN', 'Forbidden', 403)
     }
 
-    const formData = await request.formData()
-    const file = formData.get('file')
-    const bucket = formData.get('bucket')
-    const restaurantId = formData.get('restaurantId')
+    const formData = await request.formData().catch(() => null)
+    const file = formData?.get('file')
+    const bucket = formData?.get('bucket')
+    const restaurantId = formData?.get('restaurantId')
 
-    if (!file || !(file instanceof Blob)) {
-        return err('VALIDATION_ERROR', 'file is required', 400)
+    if (
+        !(file instanceof Blob) ||
+        typeof bucket !== 'string' ||
+        !ALLOWED_BUCKETS.includes(bucket as (typeof ALLOWED_BUCKETS)[number]) ||
+        typeof restaurantId !== 'string'
+    ) {
+        return err('VALIDATION_ERROR', 'file, a valid bucket, and restaurantId are required', 400)
     }
 
-    if (!bucket || typeof bucket !== 'string' || !ALLOWED_BUCKETS.includes(bucket as typeof ALLOWED_BUCKETS[number])) {
-        return err('VALIDATION_ERROR', `bucket must be one of: ${ALLOWED_BUCKETS.join(', ')}`, 400)
-    }
-
-    if (!restaurantId || typeof restaurantId !== 'string') {
-        return err('VALIDATION_ERROR', 'restaurantId is required', 400)
-    }
-
-    const filename = (file as File).name || 'upload'
+    const filename = file instanceof File ? file.name : 'upload'
     const path = `${restaurantId}/${Date.now()}-${filename}`
-    const contentType = (file as File).type || 'application/octet-stream'
 
-    const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, { contentType })
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+        contentType: file.type || 'application/octet-stream',
+    })
 
     if (uploadError) {
-        return err('INTERNAL_ERROR', uploadError.message, 500)
+        return err('CONFLICT', uploadError.message, 422)
     }
 
-    const { data: urlData } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(path)
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path)
 
-    return ok({ publicUrl: urlData.publicUrl }, 201)
+    return ok({ publicUrl: data.publicUrl }, 200)
 }
