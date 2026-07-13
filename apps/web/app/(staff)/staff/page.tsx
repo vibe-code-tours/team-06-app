@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Clock, CreditCard, CheckCircle } from 'lucide-react';
+import { useRealtimeWithPolling } from '@/hooks/useRealtimeWithPolling';
 
 interface Table {
   id: string;
@@ -37,67 +39,54 @@ export default function StaffDashboard() {
   const [tables, setTables] = useState<Table[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const supabase = createClient();
 
+  const fetchData = async () => {
+    const [tablesResult, ordersResult] = await Promise.all([
+      supabase
+        .from('tables')
+        .select('*')
+        .order('table_number', { ascending: true }),
+      supabase
+        .from('orders')
+        .select(`
+          id,
+          status,
+          payment_status,
+          created_at,
+          table:tables(table_number)
+        `)
+        .order('created_at', { ascending: false }),
+    ]);
+
+    if (tablesResult.data) {
+      setTables(tablesResult.data);
+    }
+
+    if (ordersResult.data) {
+      setOrders(ordersResult.data as unknown as Order[]);
+    }
+
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const [tablesResult, ordersResult] = await Promise.all([
-        supabase
-          .from('tables')
-          .select('*')
-          .order('table_number', { ascending: true }),
-        supabase
-          .from('orders')
-          .select(`
-            id,
-            status,
-            payment_status,
-            created_at,
-            table:tables(table_number)
-          `)
-          .order('created_at', { ascending: false }),
-      ]);
-
-      if (tablesResult.data) {
-        setTables(tablesResult.data);
-      }
-
-      if (ordersResult.data) {
-        setOrders(ordersResult.data as unknown as Order[]);
-      }
-
-      setLoading(false);
-    };
-
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('staff-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'tables',
-        },
-        () => fetchData()
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-        },
-        () => fetchData()
-      )
-      .subscribe();
+  useRealtimeWithPolling({
+    channelName: 'staff-tables',
+    table: 'tables',
+    onChange: fetchData,
+  });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [supabase]);
+  useRealtimeWithPolling({
+    channelName: 'staff-orders',
+    table: 'orders',
+    onChange: fetchData,
+  });
 
   const updateTableStatus = async (tableId: string, newStatus: string) => {
     const { error } = await supabase
@@ -112,6 +101,34 @@ export default function StaffDashboard() {
         )
       );
     }
+  };
+
+  const releaseTable = async (tableId: string) => {
+    const response = await fetch(`/api/tables/${tableId}/release`, { method: 'POST' });
+
+    if (!response.ok) {
+      const { error } = await response.json();
+      setErrorMessage(error?.message ?? 'Failed to release table');
+      return;
+    }
+
+    setErrorMessage(null);
+    fetchData();
+  };
+
+  const downloadQr = async (tableId: string, tableNumber: number) => {
+    const response = await fetch(`/api/tables/${tableId}/qr`);
+
+    if (!response.ok) {
+      setErrorMessage('Failed to generate QR code');
+      return;
+    }
+
+    const { data } = await response.json() as { data: { dataUrl: string } };
+    const link = document.createElement('a');
+    link.href = data.dataUrl;
+    link.download = `table-${tableNumber}-qr.png`;
+    link.click();
   };
 
   if (loading) {
@@ -137,6 +154,12 @@ export default function StaffDashboard() {
           <Users className="h-8 w-8" />
           <h1 className="text-3xl font-bold">Staff Dashboard</h1>
         </div>
+
+        {errorMessage && (
+          <div className="mb-6 p-3 text-sm text-red-600 bg-red-50 rounded-md" role="alert">
+            {errorMessage}
+          </div>
+        )}
 
         <Tabs defaultValue="tables" className="space-y-6">
           <TabsList>
@@ -199,6 +222,24 @@ export default function StaffDashboard() {
                           Ready
                         </Button>
                       )}
+                      {(table.status === 'OCCUPIED' || table.status === 'WAITING_PAYMENT') && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="mt-2 w-full"
+                          onClick={() => releaseTable(table.id)}
+                        >
+                          Release Table
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 w-full"
+                        onClick={() => downloadQr(table.id, table.table_number)}
+                      >
+                        Download QR
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -259,7 +300,9 @@ export default function StaffDashboard() {
                             {new Date(order.created_at).toLocaleTimeString()}
                           </div>
                         </div>
-                        <Button size="sm">Process Payment</Button>
+                        <Link href={`/cashier?order=${order.id}`}>
+                          <Button size="sm">Process Payment</Button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>

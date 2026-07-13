@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import OrderTracker from './OrderTracker';
 
 interface MenuItem {
   id: string;
@@ -48,6 +49,8 @@ export default function CustomerMenuPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [tableId, setTableId] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -121,6 +124,14 @@ export default function CustomerMenuPage() {
     });
   };
 
+  const updateSpecialInstructions = (itemId: string, instructions: string) => {
+    setCart((prev) =>
+      prev.map((ci) =>
+        ci.menuItem.id === itemId ? { ...ci, special_instructions: instructions } : ci
+      )
+    );
+  };
+
   const removeFromCart = (itemId: string) => {
     setCart((prev) => prev.filter((ci) => ci.menuItem.id !== itemId));
   };
@@ -146,10 +157,12 @@ export default function CustomerMenuPage() {
       .single();
 
     if (!tableData) {
-      alert('Table not found');
+      setErrorMessage('Table not found. Please scan the QR code again.');
       setSubmitting(false);
       return;
     }
+
+    setTableId(tableData.id);
 
     // Call the create_order_with_session function
     const { data, error } = await supabase.rpc('create_order_with_session', {
@@ -163,10 +176,11 @@ export default function CustomerMenuPage() {
     });
 
     if (error) {
-      alert('Error placing order: ' + error.message);
+      setErrorMessage(error.message);
     } else {
       setOrderPlaced(true);
       setCart([]);
+      setErrorMessage(null);
     }
 
     setSubmitting(false);
@@ -191,23 +205,13 @@ export default function CustomerMenuPage() {
     );
   }
 
-  if (orderPlaced) {
+  if (orderPlaced && tableId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="max-w-md w-full">
-          <CardContent className="py-12 text-center">
-            <div className="text-6xl mb-4">✓</div>
-            <h1 className="text-2xl font-bold mb-2">Order Placed!</h1>
-            <p className="text-gray-500 mb-6">
-              Your order has been sent to the kitchen. Please wait for your food
-              to be ready.
-            </p>
-            <Button onClick={() => setOrderPlaced(false)}>
-              Place Another Order
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <OrderTracker
+        restaurantId={restaurantId}
+        tableId={tableId}
+        onStartNewOrder={() => setOrderPlaced(false)}
+      />
     );
   }
 
@@ -302,6 +306,16 @@ export default function CustomerMenuPage() {
                                 </Button>
                               )}
                             </div>
+                            {cartItem && (
+                              <input
+                                type="text"
+                                placeholder="Special instructions (e.g. no onions)"
+                                value={cartItem.special_instructions}
+                                onChange={(e) => updateSpecialInstructions(item.id, e.target.value)}
+                                className="mt-2 w-full text-sm border rounded px-2 py-1.5 min-h-[44px]"
+                                aria-label={`Special instructions for ${item.name}`}
+                              />
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -327,6 +341,11 @@ export default function CustomerMenuPage() {
               </div>
               <span className="font-bold">${getCartTotal().toFixed(2)}</span>
             </div>
+            {errorMessage && (
+              <div className="mb-3 p-3 text-sm text-red-600 bg-red-50 rounded-md" role="alert">
+                {errorMessage}
+              </div>
+            )}
             <Button
               className="w-full"
               size="lg"

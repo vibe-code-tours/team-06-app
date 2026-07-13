@@ -2,14 +2,14 @@
 -- Development seed data
 -- =============================================================================
 -- Loaded automatically by `supabase db reset` (see supabase/config.toml [db.seed]).
--- This does NOT create a super_admin auth user — auth.users rows require the
--- GoTrue admin API, not plain SQL inserts, because passwords must be hashed
--- by GoTrue. To bootstrap a super_admin locally:
---   1. Sign up normally through the app (creates a 'customer' profile via
---      the handle_new_user trigger).
---   2. Run: UPDATE public.profiles SET role = 'super_admin' WHERE email = 'you@example.com';
+--
+-- Auth users are NOT created here — auth.users requires the GoTrue admin API.
+-- Run `npm run db:seed-users` after `supabase db reset` to create test users.
 -- =============================================================================
 
+-- ---------------------------------------------------------------------------
+-- Restaurant & menu data
+-- ---------------------------------------------------------------------------
 INSERT INTO public.restaurants (id, name, description, phone, email, address, tax_rate)
 VALUES (
     '00000000-0000-4000-8000-000000000001',
