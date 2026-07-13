@@ -6,7 +6,7 @@ export async function PUT(
     request: Request,
     { params }: { params: { restaurantId: string } }
 ) {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const {
         data: { user },

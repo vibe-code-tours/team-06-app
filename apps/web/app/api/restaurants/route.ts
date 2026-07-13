@@ -4,7 +4,7 @@ import { restaurantSchema } from '@restaurant-qr/shared'
 import { createRestaurant } from '@/lib/services/restaurantService'
 
 export async function POST(request: Request) {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const {
         data: { user },
