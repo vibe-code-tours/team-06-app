@@ -77,7 +77,7 @@ export default function RestaurantFormDialog({
                 <CardContent className="space-y-4">
                     {errorMessage && (
                         <div
-                            className="p-3 text-sm text-red-400 bg-red-900/30 rounded-md"
+                            className="p-3 text-sm text-red-600 bg-red-50 rounded-md"
                             role="alert"
                         >
                             {errorMessage}

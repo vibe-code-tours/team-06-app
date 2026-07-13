@@ -8,12 +8,12 @@
     --brand-blue: 213 88% 17%;        /* #05234F */
     --brand-orange: 27 99% 53%;       /* #FE740F */
 
-    /* Pure Dark Theme */
-    --background: 220 50% 8%;         /* Near black with blue tint */
-    --foreground: 0 0% 100%;          /* White text */
+    /* Light Theme */
+    --background: 210 40% 98%;        /* Soft off-white, faint blue tint */
+    --foreground: 213 60% 12%;        /* Dark navy text */
 
-    --card: 215 50% 12%;              /* Dark blue-gray cards */
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 100%;                /* White cards */
+    --card-foreground: 213 60% 12%;
 
     --primary: 27 99% 53%;            /* Orange primary */
     --primary-foreground: 0 0% 100%;
@@ -21,8 +21,8 @@
     --secondary: 213 88% 17%;         /* Dark blue secondary */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 215 40% 16%;             /* Muted dark */
-    --muted-foreground: 210 20% 60%;  /* Gray text */
+    --muted: 210 30% 95%;             /* Muted light */
+    --muted-foreground: 215 20% 45%;  /* Gray text */
 
     --accent: 27 99% 53%;             /* Orange accent */
     --accent-foreground: 0 0% 100%;
@@ -30,8 +30,8 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 40% 20%;            /* Subtle dark borders */
-    --input: 215 40% 18%;
+    --border: 210 25% 90%;            /* Subtle light borders */
+    --input: 210 25% 93%;
     --ring: 27 99% 53%;               /* Orange focus ring */
 
     --radius: 0.75rem;
@@ -39,28 +39,28 @@
     /* Gradient definitions */
     --gradient-primary: linear-gradient(135deg, #05234F 0%, #0A3566 50%, #0D4A80 100%);
     --gradient-accent: linear-gradient(135deg, #FE740F 0%, #FF8533 100%);
-    --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-    --gradient-glow: radial-gradient(circle at center, rgba(254,116,15,0.15) 0%, transparent 70%);
+    --gradient-card: linear-gradient(145deg, rgba(5,35,79,0.03) 0%, rgba(5,35,79,0.01) 100%);
+    --gradient-glow: radial-gradient(circle at center, rgba(254,116,15,0.12) 0%, transparent 70%);
   }
 
   .dark {
-    /* Same - always dark */
-    --background: 220 50% 8%;
-    --foreground: 0 0% 100%;
-    --card: 215 50% 12%;
-    --card-foreground: 0 0% 100%;
+    /* Same - always light */
+    --background: 210 40% 98%;
+    --foreground: 213 60% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 213 60% 12%;
     --primary: 27 99% 53%;
     --primary-foreground: 0 0% 100%;
     --secondary: 213 88% 17%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 215 40% 16%;
-    --muted-foreground: 210 20% 60%;
+    --muted: 210 30% 95%;
+    --muted-foreground: 215 20% 45%;
     --accent: 27 99% 53%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
-    --border: 215 40% 20%;
-    --input: 215 40% 18%;
+    --border: 210 25% 90%;
+    --input: 210 25% 93%;
     --ring: 27 99% 53%;
   }
 }

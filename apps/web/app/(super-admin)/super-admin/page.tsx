@@ -117,8 +117,8 @@ export default function SuperAdminDashboard() {
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
                         restaurant.is_active
-                          ? 'bg-green-900/50 text-green-300'
-                          : 'bg-red-900/50 text-red-300'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
                       }`}
                     >
                       {restaurant.is_active ? 'Active' : 'Inactive'}
