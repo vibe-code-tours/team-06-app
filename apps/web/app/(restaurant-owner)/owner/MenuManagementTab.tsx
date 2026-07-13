@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Trash2, ArrowUp, ArrowDown } from 'lucide-react'
+import Image from 'next/image'
 
 interface Props {
     restaurantId: string
@@ -276,10 +277,12 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                             >
                                 <div className="flex items-center gap-3">
                                     {item.image_url ? (
-                                        <img
+                                        <Image
                                             src={item.image_url}
                                             alt={item.name}
-                                            className="h-10 w-10 rounded object-cover"
+                                            width={40}
+                                            height={40}
+                                            className="rounded object-cover"
                                         />
                                     ) : (
                                         <div className="h-10 w-10 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">

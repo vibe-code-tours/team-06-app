@@ -11,6 +11,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import MenuManagementTab from './MenuManagementTab';
+import Image from 'next/image';
 import TableManagementTab from './TableManagementTab';
 import StaffManagementTab from './StaffManagementTab';
 
@@ -152,10 +153,12 @@ export default function OwnerDashboard() {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             {restaurant?.logo_url ? (
-              <img
+              <Image
                 src={restaurant.logo_url}
                 alt={`${restaurant.name} logo`}
-                className="h-12 w-12 rounded object-cover"
+                width={48}
+                height={48}
+                className="rounded object-cover"
               />
             ) : (
               <Store className="h-12 w-12" />
