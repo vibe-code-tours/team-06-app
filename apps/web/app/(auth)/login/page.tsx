@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ArrowRight } from 'lucide-react';
-import Image from 'next/image';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { createClient } from "@/lib/supabase/client";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function LoginPage() {
       return;
     }
 
-    router.push('/');
+    router.push("/");
     router.refresh();
   };
 
@@ -43,7 +43,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center mb-4">
             <Image
-              src="/QR_DINE_LOGO_NO_BG.png"
+              src="/logo.png"
               alt="QR Dine Logo"
               width={150}
               height={150}
@@ -51,7 +51,9 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Restaurant QR Order</h1>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Restaurant QR Order
+          </h1>
           <p className="text-gray-500 mt-2">Sign in to your dashboard</p>
         </div>
 
@@ -65,7 +67,10 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-gray-700 text-sm font-medium">
+              <label
+                htmlFor="email"
+                className="text-gray-700 text-sm font-medium"
+              >
                 Email
               </label>
               <Input
@@ -80,7 +85,10 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-gray-700 text-sm font-medium">
+              <label
+                htmlFor="password"
+                className="text-gray-700 text-sm font-medium"
+              >
                 Password
               </label>
               <Input
