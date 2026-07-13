@@ -9,6 +9,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "next": ">=14.0.0",
     "qrcode": "^1.5.4",
     "date-fns": "^3.6.0",
     "zod": "^3.23.0"
