@@ -16,9 +16,11 @@ export default function SuperAdminDashboard() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [userCount, setUserCount] = useState<UserCount>({ total: 0 });
   const [loading, setLoading] = useState(true);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
   const [dialogState, setDialogState] = useState<
     { mode: 'create' } | { mode: 'edit'; restaurant: Restaurant } | null
   >(null);
+
   const fetchData = useCallback(async () => {
     const supabase = createClient();
 
@@ -39,17 +41,47 @@ export default function SuperAdminDashboard() {
     setLoading(false);
   }, []);
 
-  const handleDelete = async (restaurantId: string, restaurantName: string) => {
-    if (!window.confirm(`Are you sure you want to delete "${restaurantName}"? This action cannot be undone.`)) {
-      return;
-    }
+  const handleToggleActive = async (restaurant: Restaurant) => {
+    const newIsActive = !restaurant.is_active;
+    setTogglingId(restaurant.id);
 
-    const response = await fetch(`/api/restaurants/${restaurantId}`, {
-      method: 'DELETE',
-    });
+    // Optimistic update
+    setRestaurants((prev) =>
+      prev.map((r) =>
+        r.id === restaurant.id ? { ...r, is_active: newIsActive } : r
+      )
+    );
 
-    if (response.ok) {
-      fetchData();
+    try {
+      const supabase = createClient();
+
+      // Update restaurant is_active
+      const { error: restaurantError } = await supabase
+        .from('restaurants')
+        .update({ is_active: newIsActive })
+        .eq('id', restaurant.id);
+
+      if (restaurantError) throw restaurantError;
+
+      // Cascade: if deactivating, also deactivate all profiles for this restaurant
+      if (!newIsActive) {
+        const { error: profilesError } = await supabase
+          .from('profiles')
+          .update({ is_active: false })
+          .eq('restaurant_id', restaurant.id);
+
+        if (profilesError) throw profilesError;
+      }
+
+      setTogglingId(null);
+    } catch {
+      // Revert optimistic update on error
+      setRestaurants((prev) =>
+        prev.map((r) =>
+          r.id === restaurant.id ? { ...r, is_active: restaurant.is_active } : r
+        )
+      );
+      setTogglingId(null);
     }
   };
 
@@ -129,14 +161,25 @@ export default function SuperAdminDashboard() {
                       Created: {new Date(restaurant.created_at).toLocaleDateString()}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        restaurant.is_active
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
+                  <div className="flex items-center gap-3">
+                    {/* Toggle Switch */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={restaurant.is_active}
+                      disabled={togglingId === restaurant.id}
+                      onClick={() => handleToggleActive(restaurant)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 ${
+                        restaurant.is_active ? 'bg-green-500' : 'bg-gray-300'
                       }`}
                     >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          restaurant.is_active ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-sm text-muted-foreground w-16">
                       {restaurant.is_active ? 'Active' : 'Inactive'}
                     </span>
                     <Button
@@ -145,13 +188,6 @@ export default function SuperAdminDashboard() {
                       onClick={() => setDialogState({ mode: 'edit', restaurant })}
                     >
                       Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(restaurant.id, restaurant.name)}
-                    >
-                      Delete
                     </Button>
                   </div>
                 </div>

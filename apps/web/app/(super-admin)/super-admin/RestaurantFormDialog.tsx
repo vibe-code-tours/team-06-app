@@ -25,7 +25,6 @@ export default function RestaurantFormDialog({
     const [email, setEmail] = useState(restaurant?.email ?? '')
     const [address, setAddress] = useState(restaurant?.address ?? '')
     const [taxRate, setTaxRate] = useState(restaurant?.tax_rate?.toString() ?? '0')
-    const [isActive, setIsActive] = useState(restaurant?.is_active ?? true)
     const [logoFile, setLogoFile] = useState<File | null>(null)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [saving, setSaving] = useState(false)
@@ -62,7 +61,7 @@ export default function RestaurantFormDialog({
         const body =
             mode === 'create'
                 ? { name, description, phone, email, address, tax_rate: Number(taxRate) }
-                : { name, description, phone, email, address, tax_rate: Number(taxRate), is_active: isActive }
+                : { name, description, phone, email, address, tax_rate: Number(taxRate) }
 
         const response = await fetch(url, {
             method,
@@ -180,39 +179,22 @@ export default function RestaurantFormDialog({
                         />
                     </div>
                     {mode === 'edit' && (
-                        <>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="is_active"
-                                    checked={isActive}
-                                    onChange={(e) => setIsActive(e.target.checked)}
-                                    className="min-h-[20px] min-w-[20px]"
-                                />
-                                <label
-                                    htmlFor="is_active"
-                                    className="text-sm font-medium"
-                                >
-                                    Active
-                                </label>
-                            </div>
-                            <div>
-                                <label htmlFor="restaurant-logo" className="text-sm font-medium">
-                                    Logo
-                                </label>
-                                <Input
-                                    id="restaurant-logo"
-                                    type="file"
-                                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                                    onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
-                                />
-                                {restaurant?.logo_url && (
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        Current logo uploaded
-                                    </p>
-                                )}
-                            </div>
-                        </>
+                        <div>
+                            <label htmlFor="restaurant-logo" className="text-sm font-medium">
+                                Logo
+                            </label>
+                            <Input
+                                id="restaurant-logo"
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+                            />
+                            {restaurant?.logo_url && (
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Current logo uploaded
+                                </p>
+                            )}
+                        </div>
                     )}
                     <div className="flex gap-2 justify-end pt-2">
                         <Button
