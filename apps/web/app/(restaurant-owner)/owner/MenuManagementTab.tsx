@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import type { Category, MenuItem } from '@restaurant-qr/shared'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Trash2, ArrowUp, ArrowDown } from 'lucide-react'
+import { Trash2, Loader2, X } from 'lucide-react'
 import Image from 'next/image'
 
 interface Props {
@@ -20,7 +20,13 @@ export default function MenuManagementTab({ restaurantId }: Props) {
     const [newItemPrice, setNewItemPrice] = useState('')
     const [newItemCategoryId, setNewItemCategoryId] = useState('')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [uploadingItemId, setUploadingItemId] = useState<string | null>(null)
+    const [addingCategory, setAddingCategory] = useState(false)
+    const [addingItem, setAddingItem] = useState(false)
+    const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null)
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+    const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
 
     const fetchMenu = async () => {
         const [catRes, itemRes] = await Promise.all([
@@ -30,7 +36,12 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
         if (catRes.ok) {
             const { data } = await catRes.json()
-            setCategories(data ?? [])
+            // Ensure categories have proper sort_order based on their position
+            const categoriesWithOrder = (data ?? []).map((cat: Category, index: number) => ({
+                ...cat,
+                sort_order: cat.sort_order ?? index
+            }))
+            setCategories(categoriesWithOrder)
         }
 
         if (itemRes.ok) {
@@ -43,8 +54,28 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         fetchMenu()
     }, [restaurantId])
 
+    const parseError = async (res: Response): Promise<string> => {
+        try {
+            const body = await res.json()
+            return body?.error?.message || body?.message || `Request failed (${res.status})`
+        } catch {
+            return `Request failed (${res.status})`
+        }
+    }
+
+    const showSuccess = (message: string) => {
+        setSuccessMessage(message)
+        setTimeout(() => setSuccessMessage(null), 3000)
+    }
+
     const handleAddCategory = async () => {
-        if (!newCategoryName.trim()) return
+        if (!newCategoryName.trim()) {
+            setErrorMessage('Category name is required')
+            return
+        }
+
+        setAddingCategory(true)
+        setErrorMessage(null)
 
         const res = await fetch('/api/categories', {
             method: 'POST',
@@ -57,54 +88,66 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         })
 
         if (!res.ok) {
-            setErrorMessage('Failed to add category')
+            const errorMsg = await parseError(res)
+            setErrorMessage(errorMsg)
+            setAddingCategory(false)
             return
         }
 
         setNewCategoryName('')
         setErrorMessage(null)
-        fetchMenu()
+        await fetchMenu()
+        setAddingCategory(false)
+        showSuccess('Category added successfully')
     }
 
-    const handleDeleteCategory = async (categoryId: string) => {
-        const res = await fetch(`/api/categories/${categoryId}`, {
+    const openDeleteModal = (category: Category) => {
+        setCategoryToDelete(category)
+        setDeleteModalOpen(true)
+    }
+
+    const handleDeleteCategory = async () => {
+        if (!categoryToDelete) return
+
+        setDeletingCategoryId(categoryToDelete.id)
+        setErrorMessage(null)
+        setDeleteModalOpen(false)
+
+        const res = await fetch(`/api/categories/${categoryToDelete.id}`, {
             method: 'DELETE',
         })
 
         if (!res.ok) {
-            setErrorMessage('Failed to delete category')
+            const errorMsg = await parseError(res)
+            setErrorMessage(errorMsg)
+            setDeletingCategoryId(null)
+            setCategoryToDelete(null)
             return
         }
 
         setErrorMessage(null)
-        fetchMenu()
-    }
-
-    const handleReorder = async (index: number, direction: 'up' | 'down') => {
-        const targetIndex = direction === 'up' ? index - 1 : index + 1
-        if (targetIndex < 0 || targetIndex >= categories.length) return
-
-        const cat = categories[index]
-        const target = categories[targetIndex]
-
-        await Promise.all([
-            fetch(`/api/categories/${cat.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sort_order: target.sort_order }),
-            }),
-            fetch(`/api/categories/${target.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sort_order: cat.sort_order }),
-            }),
-        ])
-
-        fetchMenu()
+        await fetchMenu()
+        setDeletingCategoryId(null)
+        setCategoryToDelete(null)
+        showSuccess('Category deleted successfully')
     }
 
     const handleAddItem = async () => {
-        if (!newItemName.trim() || !newItemPrice || !newItemCategoryId) return
+        if (!newItemName.trim()) {
+            setErrorMessage('Item name is required')
+            return
+        }
+        if (!newItemPrice || parseFloat(newItemPrice) <= 0) {
+            setErrorMessage('Price must be a positive number')
+            return
+        }
+        if (!newItemCategoryId) {
+            setErrorMessage('Please select a category')
+            return
+        }
+
+        setAddingItem(true)
+        setErrorMessage(null)
 
         const res = await fetch('/api/menu-items', {
             method: 'POST',
@@ -119,7 +162,9 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         })
 
         if (!res.ok) {
-            setErrorMessage('Failed to add menu item')
+            const errorMsg = await parseError(res)
+            setErrorMessage(errorMsg)
+            setAddingItem(false)
             return
         }
 
@@ -127,7 +172,9 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         setNewItemPrice('')
         setNewItemCategoryId('')
         setErrorMessage(null)
-        fetchMenu()
+        await fetchMenu()
+        setAddingItem(false)
+        showSuccess('Menu item added successfully')
     }
 
     const handleToggleAvailability = async (item: MenuItem) => {
@@ -138,12 +185,14 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         })
 
         if (!res.ok) {
-            setErrorMessage('Failed to update item')
+            const errorMsg = await parseError(res)
+            setErrorMessage(errorMsg)
             return
         }
 
         setErrorMessage(null)
         fetchMenu()
+        showSuccess(`Item marked as ${!item.is_available ? 'available' : 'unavailable'}`)
     }
 
     const uploadItemImage = async (itemId: string, file: File) => {
@@ -156,7 +205,8 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
         const uploadResponse = await fetch('/api/uploads', { method: 'POST', body: formData })
         if (!uploadResponse.ok) {
-            setErrorMessage('Failed to upload image')
+            const errorMsg = await parseError(uploadResponse)
+            setErrorMessage(errorMsg)
             setUploadingItemId(null)
             return
         }
@@ -170,7 +220,8 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         })
 
         if (!updateResponse.ok) {
-            setErrorMessage('Failed to save image URL')
+            const errorMsg = await parseError(updateResponse)
+            setErrorMessage(errorMsg)
             setUploadingItemId(null)
             return
         }
@@ -178,61 +229,94 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         setErrorMessage(null)
         setUploadingItemId(null)
         fetchMenu()
+        showSuccess('Image uploaded successfully')
     }
 
     return (
         <Card>
-            <CardContent className="pt-6">
+            <CardContent className="pt-4 md:pt-6">
                 {errorMessage && (
                     <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
                         {errorMessage}
                     </div>
                 )}
 
+                {successMessage && (
+                    <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
+                        {successMessage}
+                    </div>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                {deleteModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                        <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteModalOpen(false)} />
+                        <div className="relative bg-white rounded-lg shadow-lg p-6 max-w-md w-11/12 mx-4">
+                            <button
+                                onClick={() => setDeleteModalOpen(false)}
+                                className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                            <h3 className="text-lg font-semibold mb-2">Delete Category</h3>
+                            <p className="text-gray-600 mb-6">
+                                Are you sure you want to delete &ldquo;{categoryToDelete?.name}&rdquo;?
+                                This action cannot be undone.
+                            </p>
+                            <div className="flex justify-end gap-2">
+                                <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                                    Cancel
+                                </Button>
+                                <Button variant="destructive" onClick={handleDeleteCategory}>
+                                    Delete
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Category Section */}
-                <div className="mb-6">
-                    <h3 className="text-lg font-semibold mb-3">Categories</h3>
-                    <div className="flex gap-2 mb-3">
+                <div className="mb-4 md:mb-6">
+                    <h3 className="text-base md:text-lg font-semibold mb-3">Categories</h3>
+                    <div className="flex flex-col sm:flex-row gap-2 mb-3">
                         <Input
                             placeholder="New category name"
                             value={newCategoryName}
                             onChange={(e) => setNewCategoryName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
+                            onKeyDown={(e) => e.key === 'Enter' && !addingCategory && handleAddCategory()}
+                            disabled={addingCategory}
+                            className="flex-1"
                         />
-                        <Button onClick={handleAddCategory}>Add Category</Button>
+                        <Button onClick={handleAddCategory} disabled={addingCategory || !newCategoryName.trim()}>
+                            {addingCategory ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Adding...
+                                </>
+                            ) : (
+                                'Add Category'
+                            )}
+                        </Button>
                     </div>
-                    <div className="space-y-2">
-                        {categories.map((cat, index) => (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {categories.map((cat) => (
                             <div
                                 key={cat.id}
-                                className="flex items-center justify-between p-2 border rounded"
+                                className="flex items-center justify-between p-2 border rounded hover:bg-gray-50"
                             >
-                                <span>{cat.name}</span>
-                                <div className="flex gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleReorder(index, 'up')}
-                                        disabled={index === 0}
-                                    >
-                                        <ArrowUp className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleReorder(index, 'down')}
-                                        disabled={index === categories.length - 1}
-                                    >
-                                        <ArrowDown className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleDeleteCategory(cat.id)}
-                                    >
+                                <span className="text-sm md:text-base">{cat.name}</span>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDeleteModal(cat)}
+                                    disabled={deletingCategoryId === cat.id}
+                                >
+                                    {deletingCategoryId === cat.id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
                                         <Trash2 className="h-4 w-4 text-red-500" />
-                                    </Button>
-                                </div>
+                                    )}
+                                </Button>
                             </div>
                         ))}
                     </div>
@@ -240,25 +324,32 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
                 {/* Menu Items Section */}
                 <div>
-                    <h3 className="text-lg font-semibold mb-3">Menu Items</h3>
-                    <div className="flex gap-2 mb-3 flex-wrap">
-                        <Input
-                            placeholder="Item name"
-                            value={newItemName}
-                            onChange={(e) => setNewItemName(e.target.value)}
-                            className="flex-1 min-w-[150px]"
-                        />
-                        <Input
-                            type="number"
-                            placeholder="Price"
-                            value={newItemPrice}
-                            onChange={(e) => setNewItemPrice(e.target.value)}
-                            className="w-24"
-                        />
+                    <h3 className="text-base md:text-lg font-semibold mb-3">Menu Items</h3>
+                    <div className="flex flex-col gap-2 mb-3">
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <Input
+                                placeholder="Item name"
+                                value={newItemName}
+                                onChange={(e) => setNewItemName(e.target.value)}
+                                className="flex-1 min-w-[150px]"
+                                disabled={addingItem}
+                            />
+                            <Input
+                                type="number"
+                                placeholder="Price"
+                                value={newItemPrice}
+                                onChange={(e) => setNewItemPrice(e.target.value)}
+                                className="w-full sm:w-32"
+                                min="0"
+                                step="0.01"
+                                disabled={addingItem}
+                            />
+                        </div>
                         <select
                             value={newItemCategoryId}
                             onChange={(e) => setNewItemCategoryId(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            disabled={addingItem}
                         >
                             <option value="">Select category</option>
                             {categories.map((cat) => (
@@ -267,38 +358,41 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                 </option>
                             ))}
                         </select>
-                        <Button onClick={handleAddItem}>Add Item</Button>
+                        <Button onClick={handleAddItem} disabled={addingItem || !newItemName.trim() || !newItemPrice || !newItemCategoryId}>
+                            {addingItem ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Adding...
+                                </>
+                            ) : (
+                                'Add Item'
+                            )}
+                        </Button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-80 overflow-y-auto">
                         {items.map((item) => (
                             <div
                                 key={item.id}
-                                className="flex items-center justify-between p-2 border rounded"
+                                className="p-3 border rounded"
                             >
-                                <div className="flex items-center gap-3">
-                                    {item.image_url ? (
-                                        <Image
-                                            src={item.image_url}
-                                            alt={item.name}
-                                            width={40}
-                                            height={40}
-                                            className="rounded object-cover"
-                                        />
-                                    ) : (
-                                        <div className="h-10 w-10 rounded bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
-                                            No img
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        {item.image_url ? (
+                                            <Image
+                                                src={item.image_url}
+                                                alt={item.name}
+                                                width={40}
+                                                height={40}
+                                                className="rounded object-cover hidden sm:block"
+                                            />
+                                        ) : null}
+                                        <div>
+                                            <div className="font-medium">{item.name}</div>
+                                            <div className="text-sm text-gray-500">${item.price.toFixed(2)}</div>
                                         </div>
-                                    )}
-                                    <div>
-                                        <span className="font-medium">{item.name}</span>
-                                        <span className="ml-2 text-gray-500">
-                                            ${item.price.toFixed(2)}
-                                        </span>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-2">
                                     <span
-                                        className={`text-xs px-2 py-1 rounded ${
+                                        className={`text-xs px-2 py-1 rounded whitespace-nowrap ${
                                             item.is_available
                                                 ? 'bg-green-100 text-green-700'
                                                 : 'bg-red-100 text-red-700'
@@ -306,10 +400,13 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                     >
                                         {item.is_available ? 'Available' : 'Unavailable'}
                                     </span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-2 pt-2 border-t">
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => handleToggleAvailability(item)}
+                                        className="text-xs"
                                     >
                                         Toggle
                                     </Button>
