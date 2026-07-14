@@ -3,16 +3,17 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Store,
   UtensilsCrossed,
   Users,
   BarChart3,
-  Settings,
-  Plus,
 } from 'lucide-react';
+import MenuManagementTab from './MenuManagementTab';
+import Image from 'next/image';
+import TableManagementTab from './TableManagementTab';
+import StaffManagementTab from './StaffManagementTab';
 
 interface Restaurant {
   id: string;
@@ -32,6 +33,7 @@ interface Stats {
 
 export default function OwnerDashboard() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     activeOrders: 0,
@@ -39,10 +41,10 @@ export default function OwnerDashboard() {
     totalStaff: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const supabase = createClient();
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async () => {
       // Get current user's restaurant
       const {
         data: { user },
@@ -57,6 +59,8 @@ export default function OwnerDashboard() {
         .single();
 
       if (!profile?.restaurant_id) return;
+
+      setRestaurantId(profile.restaurant_id);
 
       // Fetch restaurant details
       const { data: restaurantData } = await supabase
@@ -102,10 +106,38 @@ export default function OwnerDashboard() {
       }
 
       setLoading(false);
-    };
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const uploadLogo = async (file: File) => {
+    if (!restaurantId) return;
+    setUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', 'restaurant-logos');
+    formData.append('restaurantId', restaurantId);
+
+    const uploadResponse = await fetch('/api/uploads', { method: 'POST', body: formData });
+    if (!uploadResponse.ok) {
+      setUploading(false);
+      return;
+    }
+
+    const { publicUrl } = await uploadResponse.json();
+
+    await fetch(`/api/restaurants/${restaurantId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ logo_url: publicUrl }),
+    });
 
     fetchData();
-  }, [supabase]);
+    setUploading(false);
+  };
 
   if (loading) {
     return (
@@ -120,16 +152,34 @@ export default function OwnerDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Store className="h-8 w-8" />
+            {restaurant?.logo_url ? (
+              <Image
+                src={restaurant.logo_url}
+                alt={`${restaurant.name} logo`}
+                width={48}
+                height={48}
+                className="rounded object-cover"
+              />
+            ) : (
+              <Store className="h-12 w-12" />
+            )}
             <div>
               <h1 className="text-3xl font-bold">{restaurant?.name || 'My Restaurant'}</h1>
               <p className="text-gray-500">Restaurant Owner Dashboard</p>
             </div>
           </div>
-          <Button>
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
+          <label className="inline-flex">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
+              disabled={uploading}
+            />
+            <span className={`inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+              {uploading ? 'Uploading...' : 'Upload Logo'}
+            </span>
+          </label>
         </div>
 
         {/* Stats */}
@@ -196,62 +246,17 @@ export default function OwnerDashboard() {
 
           {/* Menu Management */}
           <TabsContent value="menu">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Menu Items</CardTitle>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Item
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 text-center py-8">
-                  Menu management coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            {restaurantId && <MenuManagementTab restaurantId={restaurantId} />}
           </TabsContent>
 
           {/* Table Management */}
           <TabsContent value="tables">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Tables</CardTitle>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Table
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 text-center py-8">
-                  Table management coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            {restaurantId && <TableManagementTab restaurantId={restaurantId} />}
           </TabsContent>
 
           {/* Staff Management */}
           <TabsContent value="staff">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Staff Members</CardTitle>
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Invite Staff
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-500 text-center py-8">
-                  Staff management coming soon...
-                </p>
-              </CardContent>
-            </Card>
+            {restaurantId && <StaffManagementTab restaurantId={restaurantId} />}
           </TabsContent>
         </Tabs>
       </div>

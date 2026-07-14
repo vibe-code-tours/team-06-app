@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import Image from 'next/image';
 import OrderTracker from './OrderTracker';
 
 interface MenuItem {
@@ -231,9 +232,20 @@ export default function CustomerMenuPage() {
       <div className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold">{restaurant.name}</h1>
-              <p className="text-sm text-gray-500">Table {tableNumber}</p>
+            <div className="flex items-center gap-2">
+              {restaurant.logo_url && (
+                <Image
+                  src={restaurant.logo_url}
+                  alt={`${restaurant.name} logo`}
+                  width={32}
+                  height={32}
+                  className="rounded object-cover"
+                />
+              )}
+              <div>
+                <h1 className="text-xl font-bold">{restaurant.name}</h1>
+                <p className="text-sm text-gray-500">Table {tableNumber}</p>
+              </div>
             </div>
             {cart.length > 0 && (
               <Badge className="bg-blue-600">
@@ -267,10 +279,12 @@ export default function CustomerMenuPage() {
                       <CardContent className="p-4">
                         <div className="flex gap-4">
                           {item.image_url && (
-                            <img
+                            <Image
                               src={item.image_url}
                               alt={item.name}
-                              className="w-20 h-20 object-cover rounded"
+                              width={80}
+                              height={80}
+                              className="object-cover rounded"
                             />
                           )}
                           <div className="flex-1">

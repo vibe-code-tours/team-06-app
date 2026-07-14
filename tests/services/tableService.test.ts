@@ -1,7 +1,7 @@
 import { resetDatabase } from '../helpers/resetDatabase';
 import { seedTestData } from '../helpers/seedTestData';
 import { createServiceClient } from '../helpers/supabaseTestClient';
-import { releaseTable, getTableQrDataUrl } from '../../apps/web/lib/services/tableService';
+import { releaseTable, getTableQrDataUrl, createTable, deleteTable } from '../../apps/web/lib/services/tableService';
 
 describe('tableService', () => {
   const serviceClient = createServiceClient();
@@ -55,5 +55,62 @@ describe('tableService', () => {
     );
 
     expect('error' in result).toBe(true);
+  });
+
+  // =========================================================================
+  // CREATE TABLE (Piece 3)
+  // =========================================================================
+
+  describe('createTable', () => {
+    it('creates a table and returns id with qrDataUrl', async () => {
+      const fixture = await seedTestData(serviceClient);
+
+      const result = await createTable(
+        serviceClient,
+        fixture.restaurantId,
+        { table_number: 99, capacity: 6, is_active: true },
+        'https://example.app'
+      );
+
+      expect(result).toHaveProperty('id');
+      expect(result).toHaveProperty('qrDataUrl');
+      if ('id' in result) {
+        expect(result.id).toBeDefined();
+        expect(result.qrDataUrl).toMatch(/^data:image\/png;base64,/);
+      }
+    });
+
+    it('rejects duplicate table_number for same restaurant', async () => {
+      const fixture = await seedTestData(serviceClient);
+
+      const result = await createTable(
+        serviceClient,
+        fixture.restaurantId,
+        { table_number: 1, capacity: 4, is_active: true }, // fixture already has table 1
+        'https://example.app'
+      );
+
+      expect(result).toHaveProperty('error');
+    });
+  });
+
+  // =========================================================================
+  // DELETE TABLE (Piece 3)
+  // =========================================================================
+
+  describe('deleteTable', () => {
+    it('deletes a table', async () => {
+      const fixture = await seedTestData(serviceClient);
+
+      const result = await deleteTable(serviceClient, fixture.tableId);
+      expect(result).toEqual({ success: true });
+
+      const { data } = await serviceClient
+        .from('tables')
+        .select('id')
+        .eq('id', fixture.tableId)
+        .single();
+      expect(data).toBeNull();
+    });
   });
 });
