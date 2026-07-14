@@ -53,25 +53,11 @@ export default function SuperAdminDashboard() {
     );
 
     try {
-      const supabase = createClient();
+      const response = await fetch(`/api/restaurants/${restaurant.id}`, {
+        method: 'PATCH',
+      });
 
-      // Update restaurant is_active
-      const { error: restaurantError } = await supabase
-        .from('restaurants')
-        .update({ is_active: newIsActive })
-        .eq('id', restaurant.id);
-
-      if (restaurantError) throw restaurantError;
-
-      // Cascade: if deactivating, also deactivate all profiles for this restaurant
-      if (!newIsActive) {
-        const { error: profilesError } = await supabase
-          .from('profiles')
-          .update({ is_active: false })
-          .eq('restaurant_id', restaurant.id);
-
-        if (profilesError) throw profilesError;
-      }
+      if (!response.ok) throw new Error('Failed to toggle');
 
       setTogglingId(null);
     } catch {
