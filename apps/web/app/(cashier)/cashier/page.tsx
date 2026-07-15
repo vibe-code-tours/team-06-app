@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useRealtimeWithPolling } from "@/hooks/useRealtimeWithPolling";
 import { createClient } from "@/lib/supabase/client";
-import { CreditCard, DollarSign, Smartphone } from "lucide-react";
+import { CreditCard, DollarSign, Smartphone, Receipt, History } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useState } from "react";
 
@@ -266,23 +266,35 @@ function CashierDashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-blue/5 to-transparent">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <CreditCard className="h-8 w-8" />
-          <h1 className="text-3xl font-bold">Cashier Terminal</h1>
+    <div className="min-h-screen bg-gray-50 pb-12">
+      {/* Header */}
+      <div className="bg-brand-blue">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/10 text-white shrink-0">
+              <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Cashier Terminal</h1>
+              <p className="text-sm text-white/60 mt-0.5">
+                {orders.length} order{orders.length !== 1 ? "s" : ""} awaiting payment
+              </p>
+            </div>
+          </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         {errorMessage && (
           <div
-            className="mb-6 p-3 text-sm text-red-600 bg-red-50 rounded-md"
+            className="mb-6 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md"
             role="alert"
           >
             {errorMessage}
@@ -291,11 +303,15 @@ function CashierDashboardContent() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Pending Payments</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-brand-blue">
+              <Receipt className="h-5 w-5" />
+              Pending Payments
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {orders.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-10 text-center text-gray-500 flex flex-col items-center gap-2">
+                <Receipt className="h-8 w-8 text-gray-300" />
                 No orders awaiting payment
               </div>
             ) : (
@@ -305,26 +321,31 @@ function CashierDashboardContent() {
                   return (
                     <div
                       key={order.id}
-                      className="p-4 border rounded-lg cursor-pointer transition-colors hover:bg-gray-50"
+                      className="p-4 border rounded-lg cursor-pointer transition-colors hover:bg-brand-blue/5 hover:border-brand-blue/20"
                       onClick={() => setSelectedOrder(order)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">
-                            Table {order.table.table_number}
-                            {order.table.name && (
-                              <span className="text-sm text-gray-500 ml-2">
-                                ({order.table.name})
-                              </span>
-                            )}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center h-9 w-9 rounded-full bg-amber-100 text-amber-700 shrink-0">
+                            <Receipt className="h-4 w-4" />
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {order.order_items.length} items •{" "}
-                            {new Date(order.created_at).toLocaleTimeString()}
+                          <div>
+                            <div className="font-medium">
+                              Table {order.table.table_number}
+                              {order.table.name && (
+                                <span className="text-sm text-gray-500 ml-2">
+                                  ({order.table.name})
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {order.order_items.length} items •{" "}
+                              {new Date(order.created_at).toLocaleTimeString()}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold">
+                          <div className="font-bold text-brand-blue">
                             ${summary.total.toFixed(2)}
                           </div>
                           <Badge className={orderStatusColors[order.status]}>
@@ -353,7 +374,7 @@ function CashierDashboardContent() {
             {selectedOrder && (
               <>
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-brand-blue">
                     Payment Summary — Table {selectedOrder.table.table_number}
                   </DialogTitle>
                 </DialogHeader>
@@ -414,7 +435,7 @@ function CashierDashboardContent() {
                     )}
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
-                      <span>
+                      <span className="text-brand-blue">
                         ${calculateSummary(selectedOrder).total.toFixed(2)}
                       </span>
                     </div>
@@ -422,7 +443,7 @@ function CashierDashboardContent() {
 
                   <div className="space-y-2 pt-2">
                     <Button
-                      className="w-full"
+                      className="w-full bg-brand-orange hover:bg-brand-orange/90"
                       onClick={() => processPayment(selectedOrder.id, "CASH")}
                       disabled={processing}
                     >
@@ -470,7 +491,7 @@ function CashierDashboardContent() {
             {refundTarget && (
               <>
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-brand-blue">
                     Refund Table {refundTarget.tableNumber} — $
                     {refundTarget.amount.toFixed(2)}
                   </DialogTitle>
@@ -529,11 +550,15 @@ function CashierDashboardContent() {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Recent Payments</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-brand-blue">
+              <History className="h-5 w-5" />
+              Recent Payments
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {recentPayments.length === 0 ? (
-              <div className="py-4 text-center text-gray-500">
+              <div className="py-6 text-center text-gray-500 flex flex-col items-center gap-2">
+                <History className="h-6 w-6 text-gray-300" />
                 No recent payments
               </div>
             ) : (
@@ -541,9 +566,12 @@ function CashierDashboardContent() {
                 {recentPayments.map((payment) => (
                   <div
                     key={payment.id}
-                    className="flex items-center justify-between p-2 border-b last:border-0"
+                    className="flex items-center justify-between gap-2 flex-wrap p-2 border-b last:border-0"
                   >
-                    <span>
+                    <span className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
+                        <DollarSign className="h-3.5 w-3.5" />
+                      </span>
                       Table {payment.order.table.table_number} — $
                       {Number(payment.total_amount).toFixed(2)}
                       {payment.payment_status === "REFUNDED" && (
@@ -584,8 +612,8 @@ export default function CashierDashboard() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-blue/5 to-transparent">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
         </div>
       }
     >
