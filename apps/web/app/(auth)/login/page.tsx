@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -125,6 +126,11 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="text-center text-gray-400 text-xs mt-6">
           QR-based ordering system for restaurants
+        </p>
+        <p className="text-center text-xs mt-2">
+          <Link href="/qa-manual" className="text-brand-orange hover:underline">
+            Demo Guide &amp; accounts
+          </Link>
         </p>
       </div>
     </div>
