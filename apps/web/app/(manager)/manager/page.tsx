@@ -13,6 +13,7 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
+  Receipt,
 } from 'lucide-react';
 
 interface Order {
@@ -140,39 +141,53 @@ export default function ManagerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-blue/5 to-transparent">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center gap-3 mb-8">
-          <BarChart3 className="h-8 w-8" />
-          <h1 className="text-3xl font-bold">Manager Dashboard</h1>
+    <div className="min-h-screen bg-gray-50 pb-12">
+      {/* Header */}
+      <div className="bg-brand-blue">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/10 text-white shrink-0">
+              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Manager Dashboard</h1>
+              <p className="text-sm text-white/60 mt-0.5">Today&apos;s performance at a glance</p>
+            </div>
+          </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
+                <Clock className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              <div className="text-2xl font-bold text-brand-blue">{stats.totalOrders}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium text-gray-600">Completed</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 shrink-0">
+                <CheckCircle className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-emerald-600">
                 {stats.completedOrders}
               </div>
             </CardContent>
@@ -180,11 +195,13 @@ export default function ManagerDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active</CardTitle>
-              <AlertCircle className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-sm font-medium text-gray-600">Active</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-orange/10 text-brand-orange shrink-0">
+                <AlertCircle className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-brand-orange">
                 {stats.activeOrders}
               </div>
             </CardContent>
@@ -192,11 +209,13 @@ export default function ManagerDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-600">Revenue</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
+                <CreditCard className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-brand-blue">
                 ${stats.totalRevenue.toFixed(2)}
               </div>
             </CardContent>
@@ -204,11 +223,13 @@ export default function ManagerDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Order</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-600">Avg Order</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
+                <TrendingUp className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-brand-blue">
                 ${stats.averageOrderValue.toFixed(2)}
               </div>
             </CardContent>
@@ -218,11 +239,15 @@ export default function ManagerDashboard() {
         {/* Orders List */}
         <Card>
           <CardHeader>
-            <CardTitle>Today&apos;s Orders</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-brand-blue">
+              <Receipt className="h-5 w-5" />
+              Today&apos;s Orders
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {orders.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-10 text-center text-gray-500 flex flex-col items-center gap-2">
+                <Receipt className="h-8 w-8 text-gray-300" />
                 No orders today
               </div>
             ) : (
@@ -235,21 +260,24 @@ export default function ManagerDashboard() {
                   return (
                     <div
                       key={order.id}
-                      className="flex items-center justify-between p-4 border rounded-lg"
+                      className="flex items-center justify-between gap-2 flex-wrap p-4 border rounded-lg"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex items-center justify-center h-9 w-9 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
+                          <Receipt className="h-4 w-4" />
+                        </div>
                         <div className="font-medium">
                           Table {order.table[0]?.table_number}
                         </div>
                         <div className="text-sm text-gray-500">
                           {new Date(order.created_at).toLocaleTimeString()}
                         </div>
-                        <div className="text-sm">
+                        <div className="text-sm text-gray-500">
                           {order.order_items.length} items
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="font-medium">
+                        <div className="font-medium text-brand-blue">
                           ${orderTotal.toFixed(2)}
                         </div>
                         <Badge
