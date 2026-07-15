@@ -43,10 +43,46 @@ export async function POST(request: Request) {
     }
 
     const adminClient = createAdminClient()
+
+    // Check for duplicate pending invite in invites table
+    const { data: existingInvite } = await supabase
+        .from('invites')
+        .select('id, email')
+        .eq('email', parsed.data.email)
+        .eq('restaurant_id', restaurantId)
+        .eq('status', 'pending')
+        .single()
+
+    if (existingInvite) {
+        return err('VALIDATION_ERROR', 'This email has already been invited', 400)
+    }
+
     const result = await inviteStaff(adminClient, restaurantId, parsed.data)
 
     if ('error' in result) {
-        return err('INTERNAL_ERROR', result.error, 500)
+        // Return 400 for validation errors (duplicate email, etc.)
+        // Return 500 for actual server errors
+        const status = result.error.includes('already registered') ||
+                       result.error.includes('already invited')
+            ? 400
+            : 500
+        return err('VALIDATION_ERROR', result.error, status)
+    }
+
+    // Save invite to invites table
+    const { error: insertError } = await supabase
+        .from('invites')
+        .insert({
+            email: parsed.data.email,
+            role: parsed.data.role,
+            restaurant_id: restaurantId,
+            invited_by: user.id,
+            status: 'pending'
+        })
+
+    if (insertError) {
+        console.error('Failed to save invite to database:', insertError)
+        // Don't fail the request - invite was already sent via email
     }
 
     return ok(result, 201)

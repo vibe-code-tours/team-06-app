@@ -4,13 +4,21 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Trash2, RefreshCw } from 'lucide-react'
 
 interface StaffRow {
     id: string
     full_name: string
     email: string
     role: string
+}
+
+interface InviteRow {
+    id: string
+    email: string
+    role: string
+    status: string
+    created_at: string
 }
 
 interface Props {
@@ -29,19 +37,35 @@ const isValidEmail = (email: string): boolean => {
     return emailRegex.test(email)
 }
 
-interface PendingInvite {
-    email: string
-    role: string
+const formatTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (seconds < 60) return 'just now'
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
+    return date.toLocaleDateString()
+}
+
+const isInviteExpired = (createdAt: string): boolean => {
+    const date = new Date(createdAt)
+    const now = new Date()
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000
+    return now.getTime() - date.getTime() > sevenDaysMs
 }
 
 export default function StaffManagementTab({ restaurantId }: Props) {
     const [staff, setStaff] = useState<StaffRow[]>([])
-    const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
+    const [pendingInvites, setPendingInvites] = useState<InviteRow[]>([])
     const [inviteEmail, setInviteEmail] = useState('')
     const [inviteRole, setInviteRole] = useState('waiter')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [inviting, setInviting] = useState(false)
+    const [cancellingId, setCancellingId] = useState<string | null>(null)
+    const [resendingId, setResendingId] = useState<string | null>(null)
 
     const fetchStaff = async () => {
         const res = await fetch(`/api/staff?restaurant_id=${restaurantId}`)
@@ -51,8 +75,17 @@ export default function StaffManagementTab({ restaurantId }: Props) {
         }
     }
 
+    const fetchPendingInvites = async () => {
+        const res = await fetch(`/api/staff/invites?restaurant_id=${restaurantId}`)
+        if (res.ok) {
+            const { data } = await res.json()
+            setPendingInvites(data ?? [])
+        }
+    }
+
     useEffect(() => {
         fetchStaff()
+        fetchPendingInvites()
     }, [restaurantId])
 
     const parseError = async (res: Response): Promise<string> => {
@@ -95,12 +128,55 @@ export default function StaffManagementTab({ restaurantId }: Props) {
             return
         }
 
-        // Add to pending invites (will show until page refresh)
-        setPendingInvites(prev => [...prev, { email: inviteEmail.trim(), role: inviteRole }])
         setSuccessMessage(`Invite sent to ${inviteEmail.trim()}`)
         setInviteEmail('')
         setInviteRole('waiter')
         setInviting(false)
+
+        // Refresh the pending invites list
+        fetchPendingInvites()
+    }
+
+    const handleCancelInvite = async (inviteId: string) => {
+        setCancellingId(inviteId)
+        setErrorMessage(null)
+        setSuccessMessage(null)
+
+        const res = await fetch(`/api/staff/invites/${inviteId}`, {
+            method: 'DELETE',
+        })
+
+        if (!res.ok) {
+            const errorMsg = await parseError(res)
+            setErrorMessage(errorMsg)
+            setCancellingId(null)
+            return
+        }
+
+        setSuccessMessage('Invite cancelled')
+        setCancellingId(null)
+        fetchPendingInvites()
+    }
+
+    const handleResendInvite = async (inviteId: string) => {
+        setResendingId(inviteId)
+        setErrorMessage(null)
+        setSuccessMessage(null)
+
+        const res = await fetch(`/api/staff/invites/${inviteId}/resend`, {
+            method: 'POST',
+        })
+
+        if (!res.ok) {
+            const errorMsg = await parseError(res)
+            setErrorMessage(errorMsg)
+            setResendingId(null)
+            return
+        }
+
+        setSuccessMessage('Invite resent successfully')
+        setResendingId(null)
+        fetchPendingInvites()
     }
 
     return (
@@ -129,11 +205,11 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                         className="w-full"
                         disabled={inviting}
                     />
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 min-w-0">
                         <select
                             value={inviteRole}
                             onChange={(e) => setInviteRole(e.target.value)}
-                            className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className="flex h-10 flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm"
                             disabled={inviting}
                         >
                             {ROLES.map((role) => (
@@ -142,7 +218,7 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                                 </option>
                             ))}
                         </select>
-                        <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()}>
+                        <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()} className="flex-shrink-0">
                             {inviting ? (
                                 <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -158,24 +234,174 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                 {/* Staff List */}
                 <div className="space-y-2 max-h-80 overflow-y-auto">
                     {/* Pending Invites */}
-                    {pendingInvites.map((invite, index) => (
-                        <div
-                            key={`pending-${invite.email}-${index}`}
-                            className="flex items-center justify-between p-3 border rounded bg-yellow-50 border-yellow-200"
-                        >
-                            <div>
-                                <div className="font-medium text-yellow-700">
-                                    Pending
-                                </div>
-                                <div className="text-sm text-yellow-600">
-                                    {invite.email}
-                                </div>
+                    {pendingInvites.filter(i => i.status === 'pending' && !isInviteExpired(i.created_at)).length > 0 && (
+                        <>
+                            <div className="text-sm font-medium text-gray-500 mb-2">
+                                Pending Invites ({pendingInvites.filter(i => i.status === 'pending' && !isInviteExpired(i.created_at)).length})
                             </div>
-                            <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
-                                {ROLES.find(r => r.value === invite.role)?.label || invite.role} — Awaiting signup
-                            </span>
-                        </div>
-                    ))}
+                            {pendingInvites
+                                .filter(i => i.status === 'pending' && !isInviteExpired(i.created_at))
+                                .map((invite) => (
+                                <div
+                                    key={invite.id}
+                                    className="p-3 border rounded bg-yellow-50 border-yellow-200"
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-yellow-700 truncate">
+                                                {invite.email}
+                                            </div>
+                                            <div className="text-xs text-yellow-600">
+                                                <span className="font-medium">{ROLES.find(r => r.value === invite.role)?.label || invite.role}</span> • Invited {formatTimeAgo(invite.created_at)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleResendInvite(invite.id)}
+                                            disabled={true}
+                                            className="text-xs opacity-50 cursor-not-allowed"
+                                        >
+                                            <RefreshCw className="h-3 w-3 mr-1" />
+                                            Resend
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleCancelInvite(invite.id)}
+                                            disabled={cancellingId === invite.id}
+                                            className="text-xs text-red-600 hover:text-red-700"
+                                        >
+                                            {cancellingId === invite.id ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="h-3 w-3 mr-1" />
+                                            )}
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
+
+                    {/* Expired Invites */}
+                    {pendingInvites.filter(i => i.status === 'pending' && isInviteExpired(i.created_at)).length > 0 && (
+                        <>
+                            <div className="text-sm font-medium text-gray-500 mb-2 mt-4">
+                                Expired Invites ({pendingInvites.filter(i => i.status === 'pending' && isInviteExpired(i.created_at)).length})
+                            </div>
+                            {pendingInvites
+                                .filter(i => i.status === 'pending' && isInviteExpired(i.created_at))
+                                .map((invite) => (
+                                <div
+                                    key={invite.id}
+                                    className="p-3 border rounded bg-gray-50 border-gray-200"
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-gray-700 truncate">
+                                                {invite.email}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                <span className="font-medium">{ROLES.find(r => r.value === invite.role)?.label || invite.role}</span> • Expired {formatTimeAgo(invite.created_at)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleResendInvite(invite.id)}
+                                            disabled={resendingId === invite.id}
+                                            className="text-xs"
+                                        >
+                                            {resendingId === invite.id ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                                <RefreshCw className="h-3 w-3 mr-1" />
+                                            )}
+                                            Resend
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleCancelInvite(invite.id)}
+                                            disabled={cancellingId === invite.id}
+                                            className="text-xs text-red-600 hover:text-red-700"
+                                        >
+                                            {cancellingId === invite.id ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="h-3 w-3 mr-1" />
+                                            )}
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
+
+                    {/* Rejected Invites */}
+                    {pendingInvites.filter(i => i.status === 'rejected').length > 0 && (
+                        <>
+                            <div className="text-sm font-medium text-gray-500 mb-2 mt-4">
+                                Rejected Invites ({pendingInvites.filter(i => i.status === 'rejected').length})
+                            </div>
+                            {pendingInvites
+                                .filter(i => i.status === 'rejected')
+                                .map((invite) => (
+                                <div
+                                    key={invite.id}
+                                    className="p-3 border rounded bg-red-50 border-red-200"
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-red-700 truncate">
+                                                {invite.email}
+                                            </div>
+                                            <div className="text-xs text-red-500">
+                                                <span className="font-medium">{ROLES.find(r => r.value === invite.role)?.label || invite.role}</span> • Rejected {formatTimeAgo(invite.created_at)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleResendInvite(invite.id)}
+                                            disabled={resendingId === invite.id}
+                                            className="text-xs"
+                                        >
+                                            {resendingId === invite.id ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                                <RefreshCw className="h-3 w-3 mr-1" />
+                                            )}
+                                            Resend
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => handleCancelInvite(invite.id)}
+                                            disabled={cancellingId === invite.id}
+                                            className="text-xs text-red-600 hover:text-red-700"
+                                        >
+                                            {cancellingId === invite.id ? (
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="h-3 w-3 mr-1" />
+                                            )}
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
 
                     {/* Active Staff */}
                     {staff.length === 0 && pendingInvites.length === 0 ? (
@@ -183,30 +409,43 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                             No staff members yet
                         </p>
                     ) : (
-                        staff.map((member) => (
-                            <div
-                                key={member.id}
-                                className={`flex items-center justify-between p-3 border rounded ${
-                                    member.role === 'restaurant_owner' ? 'bg-orange-50 border-orange-200' : ''
-                                }`}
-                            >
-                                <div>
-                                    <div className="font-medium">
-                                        {member.full_name || 'Unnamed'}
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                        {member.email}
-                                    </div>
-                                </div>
-                                <span className={`text-xs px-2 py-1 rounded ${
-                                    member.role === 'restaurant_owner'
-                                        ? 'bg-orange-100 text-orange-700'
-                                        : 'bg-gray-100'
-                                }`}>
-                                    {member.role === 'restaurant_owner' ? 'Owner' : ROLES.find(r => r.value === member.role)?.label || member.role.replace('_', ' ')}
-                                </span>
+                        <>
+                            <div className="text-sm font-medium text-gray-500 mb-2 mt-4">
+                                Active Staff ({staff.length})
                             </div>
-                        ))
+                            {staff.map((member) => (
+                                <div
+                                    key={member.id}
+                                    className={`flex items-center justify-between p-3 border rounded ${
+                                        member.role === 'restaurant_owner' ? 'bg-orange-50 border-orange-200' : ''
+                                    }`}
+                                >
+                                    <div className="min-w-0 flex-1">
+                                        <div className="font-medium truncate">
+                                            {member.full_name || 'Unnamed'}
+                                        </div>
+                                        <div className="text-sm text-gray-500 truncate">
+                                            {member.email}
+                                        </div>
+                                    </div>
+                                    <span className={`text-xs px-2 py-1 rounded ml-2 flex-shrink-0 ${
+                                        member.role === 'restaurant_owner'
+                                            ? 'bg-orange-100 text-orange-700 font-semibold'
+                                            : member.role === 'manager'
+                                            ? 'bg-blue-100 text-blue-700 font-semibold'
+                                            : member.role === 'kitchen_staff'
+                                            ? 'bg-purple-100 text-purple-700 font-semibold'
+                                            : member.role === 'waiter'
+                                            ? 'bg-green-100 text-green-700 font-semibold'
+                                            : member.role === 'cashier'
+                                            ? 'bg-yellow-100 text-yellow-700 font-semibold'
+                                            : 'bg-gray-100'
+                                    }`}>
+                                        {member.role === 'restaurant_owner' ? 'Owner' : ROLES.find(r => r.value === member.role)?.label || member.role.replace('_', ' ')}
+                                    </span>
+                                </div>
+                            ))}
+                        </>
                     )}
                 </div>
             </CardContent>
