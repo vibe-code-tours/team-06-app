@@ -6,8 +6,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, ChefHat, UtensilsCrossed } from 'lucide-react';
+import Image from 'next/image';
 import OrderTracker from './OrderTracker';
 
 interface MenuItem {
@@ -198,8 +198,8 @@ export default function CustomerMenuPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-blue/5 to-transparent">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
       </div>
     );
   }
@@ -208,6 +208,7 @@ export default function CustomerMenuPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
+          <UtensilsCrossed className="h-10 w-10 mx-auto text-gray-300 mb-3" />
           <h1 className="text-2xl font-bold mb-2">Restaurant not found</h1>
           <p className="text-gray-500">This restaurant may be inactive</p>
         </div>
@@ -227,129 +228,169 @@ export default function CustomerMenuPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
-      {/* Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold">{restaurant.name}</h1>
-              <p className="text-sm text-gray-500">Table {tableNumber}</p>
+      {/* Header + category quick-jump */}
+      <div className="sticky top-0 z-10">
+        <div className="bg-brand-blue shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {restaurant.logo_url ? (
+                  <Image
+                    src={restaurant.logo_url}
+                    alt={`${restaurant.name} logo`}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover ring-2 ring-white/20"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-white/10 text-brand-orange">
+                    <ChefHat className="h-5 w-5" />
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-xl font-bold text-white">{restaurant.name}</h1>
+                  <span className="inline-block mt-0.5 text-xs font-medium text-brand-blue bg-white/90 rounded-full px-2 py-0.5">
+                    Table {tableNumber}
+                  </span>
+                </div>
+              </div>
+              {cart.length > 0 && (
+                <Badge className="bg-brand-orange gap-1">
+                  <ShoppingCart className="h-3 w-3" />
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                </Badge>
+              )}
             </div>
-            {cart.length > 0 && (
-              <Badge className="bg-blue-600">
-                {cart.reduce((sum, item) => sum + item.quantity, 0)} items
-              </Badge>
-            )}
+          </div>
+        </div>
+
+        {/* Category quick-jump */}
+        <div className="bg-gray-50/95 backdrop-blur border-b border-gray-100">
+          <div className="max-w-4xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto">
+            {categories.map((category) => (
+              <a
+                key={category.id}
+                href={`#category-${category.id}`}
+                className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 hover:border-brand-orange hover:text-brand-orange transition-colors"
+              >
+                {category.name}
+              </a>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Menu */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <Tabs defaultValue={categories[0]?.id} className="space-y-6">
-          <TabsList className="w-full justify-start overflow-x-auto">
-            {categories.map((category) => (
-              <TabsTrigger key={category.id} value={category.id}>
-                {category.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {categories.map((category) => (
-            <TabsContent key={category.id} value={category.id}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {category.items.map((item) => {
-                  const cartItem = cart.find(
-                    (ci) => ci.menuItem.id === item.id
-                  );
-                  return (
-                    <Card key={item.id} className="overflow-hidden">
-                      <CardContent className="p-4">
-                        <div className="flex gap-4">
-                          {item.image_url && (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              className="w-20 h-20 object-cover rounded"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <h3 className="font-medium">{item.name}</h3>
-                            <p className="text-sm text-gray-500 line-clamp-2">
-                              {item.description}
-                            </p>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="font-bold">
-                                ${item.price.toFixed(2)}
-                              </span>
-                              {cartItem ? (
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      updateQuantity(item.id, -1)
-                                    }
-                                  >
-                                    <Minus className="h-4 w-4" />
-                                  </Button>
-                                  <span className="w-8 text-center">
-                                    {cartItem.quantity}
-                                  </span>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() =>
-                                      updateQuantity(item.id, 1)
-                                    }
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ) : (
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
+        {categories.map((category) => (
+          <section key={category.id} id={`category-${category.id}`} className="scroll-mt-32">
+            <h2 className="text-lg font-bold text-brand-blue mb-3">{category.name}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {category.items.map((item) => {
+                const cartItem = cart.find(
+                  (ci) => ci.menuItem.id === item.id
+                );
+                return (
+                  <Card
+                    key={item.id}
+                    className="overflow-hidden transition-shadow hover:shadow-md"
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex gap-3">
+                        {item.image_url ? (
+                          <Image
+                            src={item.image_url}
+                            alt={item.name}
+                            width={64}
+                            height={64}
+                            className="object-cover rounded-lg h-16 w-16 shrink-0"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-16 w-16 shrink-0 rounded-lg bg-brand-blue/5 text-brand-blue/30">
+                            <UtensilsCrossed className="h-6 w-6" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm">{item.name}</h3>
+                          <p className="text-xs text-gray-500 line-clamp-1">
+                            {item.description}
+                          </p>
+                          <div className="flex items-center justify-between mt-1.5">
+                            <span className="font-bold text-sm text-brand-blue">
+                              ${item.price.toFixed(2)}
+                            </span>
+                            {cartItem ? (
+                              <div className="flex items-center gap-1.5">
                                 <Button
                                   size="sm"
-                                  onClick={() => addToCart(item)}
+                                  variant="outline"
+                                  className="rounded-full h-7 w-7 p-0"
+                                  onClick={() =>
+                                    updateQuantity(item.id, -1)
+                                  }
                                 >
-                                  <Plus className="h-4 w-4 mr-1" />
-                                  Add
+                                  <Minus className="h-3.5 w-3.5" />
                                 </Button>
-                              )}
-                            </div>
-                            {cartItem && (
-                              <input
-                                type="text"
-                                placeholder="Special instructions (e.g. no onions)"
-                                value={cartItem.special_instructions}
-                                onChange={(e) => updateSpecialInstructions(item.id, e.target.value)}
-                                className="mt-2 w-full text-sm border rounded px-2 py-1.5 min-h-[44px]"
-                                aria-label={`Special instructions for ${item.name}`}
-                              />
+                                <span className="w-5 text-center text-sm font-medium">
+                                  {cartItem.quantity}
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-full h-7 w-7 p-0"
+                                  onClick={() =>
+                                    updateQuantity(item.id, 1)
+                                  }
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="rounded-full h-7 px-3 text-xs bg-brand-orange hover:bg-brand-orange/90"
+                                onClick={() => addToCart(item)}
+                              >
+                                <Plus className="h-3.5 w-3.5 mr-1" />
+                                Add
+                              </Button>
                             )}
                           </div>
+                          {cartItem && (
+                            <input
+                              type="text"
+                              placeholder="Special instructions (e.g. no onions)"
+                              value={cartItem.special_instructions}
+                              onChange={(e) => updateSpecialInstructions(item.id, e.target.value)}
+                              className="mt-2 w-full text-xs border rounded px-2 py-1.5 min-h-[36px]"
+                              aria-label={`Special instructions for ${item.name}`}
+                            />
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
 
       {/* Cart Footer */}
       {cart.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-blue shadow-lg">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
+                <div className="relative flex items-center justify-center h-9 w-9 rounded-full bg-brand-blue/10 text-brand-blue">
+                  <ShoppingCart className="h-4 w-4" />
+                </div>
                 <span className="font-medium">
                   {cart.reduce((sum, item) => sum + item.quantity, 0)} items
                 </span>
               </div>
-              <span className="font-bold">${getCartTotal().toFixed(2)}</span>
+              <span className="font-bold text-lg text-brand-blue">${getCartTotal().toFixed(2)}</span>
             </div>
             {errorMessage && (
               <div
@@ -364,7 +405,7 @@ export default function CustomerMenuPage() {
               </div>
             )}
             <Button
-              className="w-full"
+              className="w-full bg-brand-orange hover:bg-brand-orange/90"
               size="lg"
               onClick={placeOrder}
               disabled={submitting}
