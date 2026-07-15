@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Building2, Users, Store } from 'lucide-react';
 import RestaurantFormDialog from './RestaurantFormDialog';
+import InviteOwnerDialog from './InviteOwnerDialog';
 import type { Restaurant } from '@restaurant-qr/shared';
 
 interface UserCount {
@@ -19,6 +20,9 @@ export default function SuperAdminDashboard() {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [dialogState, setDialogState] = useState<
     { mode: 'create' } | { mode: 'edit'; restaurant: Restaurant } | null
+  >(null);
+  const [inviteState, setInviteState] = useState<
+    { restaurantId: string; restaurantName: string } | null
   >(null);
 
   const fetchData = useCallback(async () => {
@@ -171,6 +175,18 @@ export default function SuperAdminDashboard() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() =>
+                        setInviteState({
+                          restaurantId: restaurant.id,
+                          restaurantName: restaurant.name,
+                        })
+                      }
+                    >
+                      Invite Owner
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setDialogState({ mode: 'edit', restaurant })}
                     >
                       Edit
@@ -191,6 +207,17 @@ export default function SuperAdminDashboard() {
               fetchData();
             }}
             onClose={() => setDialogState(null)}
+          />
+        )}
+
+        {inviteState && (
+          <InviteOwnerDialog
+            restaurantId={inviteState.restaurantId}
+            restaurantName={inviteState.restaurantName}
+            onInvited={() => {
+              setInviteState(null);
+            }}
+            onClose={() => setInviteState(null)}
           />
         )}
       </div>

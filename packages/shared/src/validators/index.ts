@@ -133,7 +133,7 @@ export const userSchema = z.object({
 
 export const inviteStaffSchema = z.object({
   email: z.string().email('Invalid email address'),
-  role: z.enum(['manager', 'kitchen_staff', 'waiter', 'cashier']),
+  role: z.enum(['restaurant_owner', 'manager', 'kitchen_staff', 'waiter', 'cashier']),
 });
 
 // ============================================================================
