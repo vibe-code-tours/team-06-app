@@ -1,55 +1,50 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: { headers: request.headers },
-  });
+  })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          });
-          response.cookies.set({ name, value: '', ...options });
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            request.cookies.set({ name, value, ...options })
+            response = NextResponse.next({
+              request: { headers: request.headers },
+            })
+            response.cookies.set({ name, value, ...options })
+          })
         },
       },
     }
-  );
+  )
 
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabase.auth.getUser()
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/api/menu'];
+  const publicRoutes = ['/login', '/api/menu']
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
-  );
+  )
 
   // Customer menu route (public)
-  const isCustomerMenu = /^\/[a-f0-9-]+\/\d+$/.test(request.nextUrl.pathname);
+  const isCustomerMenu = /^\/[a-f0-9-]+\/\d+$/.test(request.nextUrl.pathname)
 
   if (!user && !isPublicRoute && !isCustomerMenu) {
     // No user, redirect to login
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
 
   if (user) {
@@ -58,10 +53,10 @@ export async function middleware(request: NextRequest) {
       .from('profiles')
       .select('role, restaurant_id')
       .eq('id', user.id)
-      .single();
+      .single()
 
     if (profile) {
-      const pathname = request.nextUrl.pathname;
+      const pathname = request.nextUrl.pathname
 
       // Role-based routing
       const roleRoutes: Record<string, string> = {
@@ -72,14 +67,14 @@ export async function middleware(request: NextRequest) {
         waiter: '/staff',
         cashier: '/cashier',
         customer: '/',
-      };
+      }
 
       // Redirect to appropriate dashboard if on root or login
       if (pathname === '/' || pathname === '/login') {
-        const redirectPath = roleRoutes[profile.role] || '/';
-        const url = request.nextUrl.clone();
-        url.pathname = redirectPath;
-        return NextResponse.redirect(url);
+        const redirectPath = roleRoutes[profile.role] || '/'
+        const url = request.nextUrl.clone()
+        url.pathname = redirectPath
+        return NextResponse.redirect(url)
       }
 
       // Check role-based access
@@ -91,26 +86,26 @@ export async function middleware(request: NextRequest) {
         waiter: ['/staff', '/api/tables'],
         cashier: ['/cashier', '/api/payments'],
         customer: ['/'],
-      };
+      }
 
-      const allowed = allowedRoutes[profile.role] || [];
-      const hasAccess = allowed.some((route) => pathname.startsWith(route));
+      const allowed = allowedRoutes[profile.role] || []
+      const hasAccess = allowed.some((route) => pathname.startsWith(route))
 
       if (!hasAccess && !pathname.startsWith('/api/')) {
         // Redirect to appropriate dashboard
-        const redirectPath = roleRoutes[profile.role] || '/';
-        const url = request.nextUrl.clone();
-        url.pathname = redirectPath;
-        return NextResponse.redirect(url);
+        const redirectPath = roleRoutes[profile.role] || '/'
+        const url = request.nextUrl.clone()
+        url.pathname = redirectPath
+        return NextResponse.redirect(url)
       }
     }
   }
 
-  return response;
+  return response
 }
 
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-};
+}
