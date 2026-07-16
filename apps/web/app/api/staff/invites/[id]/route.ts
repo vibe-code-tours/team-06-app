@@ -1,5 +1,6 @@
 import { ok, err } from '@restaurant-qr/shared/http/apiResponse'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function DELETE(
     request: Request,
@@ -29,7 +30,7 @@ export async function DELETE(
     // Get the invite to verify ownership
     const { data: invite } = await supabase
         .from('invites')
-        .select('id, restaurant_id')
+        .select('id, email, restaurant_id')
         .eq('id', id)
         .single()
 
@@ -39,6 +40,31 @@ export async function DELETE(
 
     if (invite.restaurant_id !== profile.restaurant_id) {
         return err('FORBIDDEN', 'Access denied', 403)
+    }
+
+    // Find and delete the auth user that was created when invite was sent
+    const adminClient = createAdminClient()
+    const { data: existingUsers } = await adminClient.auth.admin.listUsers()
+    const existingUser = existingUsers?.users?.find(u => u.email === invite.email)
+
+    if (existingUser) {
+        const { error: deleteError } = await adminClient.auth.admin.deleteUser(existingUser.id)
+        if (deleteError) {
+            console.error('Failed to delete auth user:', deleteError)
+            // Continue even if delete fails - update invite status
+        }
+    }
+
+    // Delete profile if it exists
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('email', invite.email)
+        .eq('restaurant_id', invite.restaurant_id)
+
+    if (profileError) {
+        console.error('Failed to delete profile:', profileError)
+        // Continue even if delete fails
     }
 
     // Delete the invite
