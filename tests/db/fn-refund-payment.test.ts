@@ -35,6 +35,13 @@ describe('refund_payment()', () => {
       .single();
     expect(payment!.payment_status).toBe('REFUNDED');
     expect(payment!.notes).toMatch(/Customer complaint about food quality/);
+
+    const { data: order } = await serviceClient
+      .from('orders')
+      .select('payment_status')
+      .eq('id', orderId)
+      .single();
+    expect(order!.payment_status).toBe('REFUNDED');
   });
 
   it('rejects refunding a payment that is not COMPLETED', async () => {

@@ -31,6 +31,14 @@ const paymentStatusColors: Record<string, string> = {
   REFUNDED: "bg-red-100 text-red-800",
 };
 
+// refund_payment() appends notes as "REFUNDED by <user id>: <reason>"; pull
+// out just the reason for display so cashiers don't see the internal user id.
+function extractRefundReason(notes: string | null): string | null {
+  if (!notes) return null;
+  const match = notes.match(/REFUNDED by [^:]+:\s*([\s\S]+)$/);
+  return match ? match[1].trim() : null;
+}
+
 interface OrderItem {
   id: string;
   quantity: number;
@@ -64,6 +72,7 @@ interface RecentPayment {
   id: string;
   total_amount: number;
   payment_status: string;
+  notes: string | null;
   order: { table: { table_number: number } };
 }
 
@@ -147,9 +156,9 @@ function CashierDashboardContent() {
     const { data } = await supabase
       .from("payments")
       .select(
-        "id, total_amount, payment_status, order:orders(table:tables(table_number))",
+        "id, total_amount, payment_status, notes, order:orders(table:tables(table_number))",
       )
-      .eq("payment_status", "COMPLETED")
+      .in("payment_status", ["COMPLETED", "REFUNDED"])
       .order("created_at", { ascending: false })
       .limit(10);
     if (data) {
@@ -563,21 +572,33 @@ function CashierDashboardContent() {
               </div>
             ) : (
               <div className="space-y-2">
-                {recentPayments.map((payment) => (
+                {recentPayments.map((payment) => {
+                  const refundReason =
+                    payment.payment_status === "REFUNDED"
+                      ? extractRefundReason(payment.notes)
+                      : null;
+                  return (
                   <div
                     key={payment.id}
                     className="flex items-center justify-between gap-2 flex-wrap p-2 border-b last:border-0"
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
-                        <DollarSign className="h-3.5 w-3.5" />
+                    <span className="flex flex-col gap-0.5">
+                      <span className="flex items-center gap-2">
+                        <span className="flex items-center justify-center h-7 w-7 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
+                          <DollarSign className="h-3.5 w-3.5" />
+                        </span>
+                        Table {payment.order.table.table_number} — $
+                        {Number(payment.total_amount).toFixed(2)}
+                        {payment.payment_status === "REFUNDED" && (
+                          <Badge className={paymentStatusColors["REFUNDED"]}>
+                            Refunded
+                          </Badge>
+                        )}
                       </span>
-                      Table {payment.order.table.table_number} — $
-                      {Number(payment.total_amount).toFixed(2)}
-                      {payment.payment_status === "REFUNDED" && (
-                        <Badge className={paymentStatusColors["REFUNDED"]}>
-                          Refunded
-                        </Badge>
+                      {refundReason && (
+                        <span className="text-xs text-gray-500 pl-9">
+                          Reason: {refundReason}
+                        </span>
                       )}
                     </span>
                     {payment.payment_status === "COMPLETED" && (
@@ -598,7 +619,8 @@ function CashierDashboardContent() {
                       </Button>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>

@@ -27,7 +27,7 @@ export type OrderStatus =
   | 'COMPLETED'
   | 'CANCELLED';
 
-export type OrderPaymentStatus = 'UNPAID' | 'PAID';
+export type OrderPaymentStatus = 'UNPAID' | 'PAID' | 'REFUNDED';
 
 export type SessionStatus = 'ACTIVE' | 'CLOSED' | 'RELEASED';
 

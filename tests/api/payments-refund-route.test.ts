@@ -55,7 +55,39 @@ describe('POST /api/payments/[paymentId]/refund', () => {
     expect(response.status).toBe(307);
   });
 
-  it('rejects a cashier with 403', async () => {
+  it('rejects a kitchen_staff with 403', async () => {
+    const fixture = await seedTestData(serviceClient);
+    const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
+      p_restaurant_id: fixture.restaurantId,
+      p_table_id: fixture.tableId,
+      p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
+    });
+    const { data: paymentId } = await serviceClient.rpc('process_payment', {
+      p_order_id: orderId,
+      p_amount: 12.5,
+      p_payment_method: 'CASH',
+    });
+
+    const kitchenClient = await createRoleClient(
+      fixture.profiles.kitchen_staff.email,
+      fixture.profiles.kitchen_staff.password
+    );
+    const cookie = await buildAuthCookie(kitchenClient);
+
+    const response = await fetch(`${BASE_URL}/api/payments/${paymentId}/refund`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookie,
+      },
+      body: JSON.stringify({ reason: 'test' }),
+      redirect: 'manual',
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('allows a cashier to refund a completed payment', async () => {
     const fixture = await seedTestData(serviceClient);
     const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
       p_restaurant_id: fixture.restaurantId,
@@ -80,11 +112,11 @@ describe('POST /api/payments/[paymentId]/refund', () => {
         'Content-Type': 'application/json',
         Cookie: cookie,
       },
-      body: JSON.stringify({ reason: 'test' }),
+      body: JSON.stringify({ reason: 'goodwill refund' }),
       redirect: 'manual',
     });
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(200);
   });
 
   it('returns 400 when reason is missing', async () => {

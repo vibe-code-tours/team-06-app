@@ -327,7 +327,7 @@ Super Admin
 | **Payments**          |                   |                   |                   |                   |                   |                   |                   |
 | Process payment       | ✅ (any)          | ✅ (own)          | ✅ (own)          | ❌                | ❌                | ✅ (own)          | ❌                |
 | View payments         | ✅ (any)          | ✅ (own)          | ✅ (own)          | ❌                | ✅ (own)          | ✅ (own)          | ❌                |
-| Issue refund          | ✅ (any)          | ✅ (own)          | ✅ (own)          | ❌                | ❌                | ❌                | ❌                |
+| Issue refund          | ✅ (any)          | ✅ (own)          | ✅ (own)          | ❌                | ❌                | ✅ (own)          | ❌                |
 | **Staff**             |                   |                   |                   |                   |                   |                   |                   |
 | View staff list       | ✅ (any)          | ✅ (own)          | ✅ (own)          | ❌                | ❌                | ❌                | ❌                |
 | Invite staff          | ✅ (any)          | ✅ (own)          | ❌                | ❌                | ❌                | ❌                | ❌                |
