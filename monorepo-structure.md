@@ -18,11 +18,11 @@ team-06-app/
 │   │   │   ├── (manager)/
 │   │   │   │   └── manager/         # Manager dashboard
 │   │   │   ├── (kitchen)/
-│   │   │   │   └── kitchen/         # Kitchen display
+│   │   │   │   └── kitchen/         # Kitchen dashbord
 │   │   │   ├── (staff)/
 │   │   │   │   └── staff/           # Waiter/Staff dashboard
 │   │   │   ├── (cashier)/
-│   │   │   │   └── cashier/         # Cashier payment terminal
+│   │   │   │   └── cashier/         # Cashier payment dashboard
 │   │   │   ├── (customer)/
 │   │   │   │   └── [restaurantId]/
 │   │   │   │       └── [tableNumber]/  # Customer menu view

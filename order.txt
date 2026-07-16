@@ -117,7 +117,7 @@ Restaurant QR Order System
 - /super-admin — Super Admin dashboard
 - /owner — Restaurant Owner dashboard
 - /manager — Manager dashboard
-- /kitchen — Kitchen display
+- /kitchen — Kitchen dashbord
 - /staff — Waiter/Staff dashboard
-- /cashier — Cashier payment terminal
+- /cashier — Cashier payment dashboard
 - /{restaurantId}/{tableNumber} — Customer menu view
