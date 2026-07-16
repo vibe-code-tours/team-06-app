@@ -24,6 +24,9 @@ export default function AcceptInvitePage() {
     const [confirmPassword, setConfirmPassword] = useState('')
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
+    const [rejecting, setRejecting] = useState(false)
+    const [rejected, setRejected] = useState(false)
+    const [rejectedRole, setRejectedRole] = useState('')
     const [error, setError] = useState<string | null>(null)
 
     // Session-derived data
@@ -176,8 +179,30 @@ export default function AcceptInvitePage() {
             return false
         }
 
-        if (password.length < 6) {
-            setError('Password must be at least 6 characters')
+        const trimmedPassword = password.trim()
+
+        if (trimmedPassword.length < 8) {
+            setError('Password must be at least 8 characters')
+            return false
+        }
+
+        if (password.length > 128) {
+            setError('Password must be 128 characters or less')
+            return false
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            setError('Password must contain at least one uppercase letter')
+            return false
+        }
+
+        if (!/[a-z]/.test(password)) {
+            setError('Password must contain at least one lowercase letter')
+            return false
+        }
+
+        if (!/[0-9]/.test(password)) {
+            setError('Password must contain at least one number')
             return false
         }
 
@@ -209,25 +234,41 @@ export default function AcceptInvitePage() {
             }
 
             // Create profile (skipped by trigger for invited users)
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                await supabase
-                    .from('profiles')
-                    .insert({
-                        id: user.id,
-                        email: user.email || '',
-                        full_name: fullName.trim(),
-                        role: role as 'waiter' | 'manager' | 'kitchen_staff' | 'cashier',
-                        restaurant_id: restaurantId,
-                    })
+            const { data: { user }, error: userError } = await supabase.auth.getUser()
+            if (userError || !user) {
+                setError('Failed to get user information. Please try again.')
+                setSubmitting(false)
+                return
+            }
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: user.id,
+                    email: user.email || '',
+                    full_name: fullName.trim(),
+                    role: role as 'waiter' | 'manager' | 'kitchen_staff' | 'cashier',
+                    restaurant_id: restaurantId,
+                })
+
+            if (profileError) {
+                setError('Failed to create profile. Please try again.')
+                setSubmitting(false)
+                return
             }
 
             // Update invite status to accepted
             if (inviteId) {
-                await supabase
+                const { error: inviteError } = await supabase
                     .from('invites')
                     .update({ status: 'accepted' })
                     .eq('id', inviteId)
+
+                if (inviteError) {
+                    setError('Failed to update invite status. Please try again.')
+                    setSubmitting(false)
+                    return
+                }
             }
 
             // Sign out and redirect to login
@@ -240,25 +281,30 @@ export default function AcceptInvitePage() {
     }
 
     const handleReject = async () => {
-        setSubmitting(true)
+        setRejecting(true)
         setError(null)
 
         try {
             // Call reject API which also deletes the auth user
             if (inviteId) {
-                await fetch(`/api/staff/invites/${inviteId}/reject`, {
+                const response = await fetch(`/api/staff/invites/${inviteId}/reject`, {
                     method: 'POST',
                 })
+
+                if (!response.ok) {
+                    throw new Error('Failed to reject invite')
+                }
             }
 
             // Sign out the user (they have a session from token in URL hash)
             await supabase.auth.signOut()
 
-            // Redirect to home page
-            router.push('/?message=Invite declined')
+            // Show rejection success modal instead of redirecting
+            setRejectedRole(role)
+            setRejected(true)
         } catch (err) {
             setError('An error occurred. Please try again.')
-            setSubmitting(false)
+            setRejecting(false)
         }
     }
 
@@ -266,6 +312,34 @@ export default function AcceptInvitePage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+            </div>
+        )
+    }
+
+    // Rejection success modal
+    if (rejected) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <Card className="w-full max-w-md">
+                    <CardContent className="pt-6">
+                        <div className="text-center">
+                            <div className="text-4xl mb-4">✅</div>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">Invitation Declined</h1>
+                            <p className="text-gray-600 mb-6">
+                                You declined the invitation to join as{' '}
+                                <span className="font-semibold text-orange-600">
+                                    {ROLES[rejectedRole] || rejectedRole}
+                                </span>
+                            </p>
+                            <Button
+                                className="w-full bg-orange-500 hover:bg-orange-600"
+                                onClick={() => router.push('/')}
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         )
     }
@@ -341,7 +415,7 @@ export default function AcceptInvitePage() {
                                 placeholder="Enter your full name"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
-                                disabled={submitting}
+                                disabled={submitting || rejecting}
                             />
                         </div>
 
@@ -363,10 +437,10 @@ export default function AcceptInvitePage() {
                             </label>
                             <Input
                                 type="password"
-                                placeholder="Create a password (min 6 characters)"
+                                placeholder="Create a password (min 8 characters)"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                disabled={submitting}
+                                disabled={submitting || rejecting}
                             />
                         </div>
 
@@ -379,7 +453,7 @@ export default function AcceptInvitePage() {
                                 placeholder="Confirm your password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                disabled={submitting}
+                                disabled={submitting || rejecting}
                             />
                         </div>
 
@@ -387,10 +461,10 @@ export default function AcceptInvitePage() {
                             <Button
                                 variant="outline"
                                 onClick={handleReject}
-                                disabled={submitting}
+                                disabled={submitting || rejecting}
                                 className="flex-1 border-orange-500 text-orange-600 hover:bg-orange-50"
                             >
-                                {submitting ? (
+                                {rejecting ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                     'Reject'
@@ -398,7 +472,7 @@ export default function AcceptInvitePage() {
                             </Button>
                             <Button
                                 onClick={handleAccept}
-                                disabled={submitting || !fullName.trim() || !password || !confirmPassword}
+                                disabled={submitting || rejecting || !fullName.trim() || !password || !confirmPassword}
                                 className="flex-1 bg-green-600 hover:bg-green-700"
                             >
                                 {submitting ? (
