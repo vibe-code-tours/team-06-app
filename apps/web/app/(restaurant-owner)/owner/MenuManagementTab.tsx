@@ -19,12 +19,15 @@ export default function MenuManagementTab({ restaurantId }: Props) {
     const [newItemName, setNewItemName] = useState('')
     const [newItemPrice, setNewItemPrice] = useState('')
     const [newItemCategoryId, setNewItemCategoryId] = useState('')
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
-    const [successMessage, setSuccessMessage] = useState<string | null>(null)
+    const [categoryError, setCategoryError] = useState<string | null>(null)
+    const [categorySuccess, setCategorySuccess] = useState<string | null>(null)
+    const [itemError, setItemError] = useState<string | null>(null)
+    const [itemSuccess, setItemSuccess] = useState<string | null>(null)
     const [uploadingItemId, setUploadingItemId] = useState<string | null>(null)
     const [addingCategory, setAddingCategory] = useState(false)
     const [addingItem, setAddingItem] = useState(false)
     const [deletingCategoryId, setDeletingCategoryId] = useState<string | null>(null)
+    const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
     const [deleteModalOpen, setDeleteModalOpen] = useState(false)
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
 
@@ -63,19 +66,44 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         }
     }
 
-    const showSuccess = (message: string) => {
-        setSuccessMessage(message)
-        setTimeout(() => setSuccessMessage(null), 3000)
+    const showCategoryError = (message: string) => {
+        setCategoryError(message)
+        setTimeout(() => setCategoryError(null), 5000)
+    }
+
+    const showCategorySuccess = (message: string) => {
+        setCategorySuccess(message)
+        setTimeout(() => setCategorySuccess(null), 5000)
+    }
+
+    const showItemError = (message: string) => {
+        setItemError(message)
+        setTimeout(() => setItemError(null), 5000)
+    }
+
+    const showItemSuccess = (message: string) => {
+        setItemSuccess(message)
+        setTimeout(() => setItemSuccess(null), 5000)
     }
 
     const handleAddCategory = async () => {
         if (!newCategoryName.trim()) {
-            setErrorMessage('Category name is required')
+            showCategoryError('Category name is required')
+            return
+        }
+
+        if (categories.some(c => c.name.toLowerCase() === newCategoryName.trim().toLowerCase())) {
+            showCategoryError('A category with this name already exists')
+            return
+        }
+
+        if (newCategoryName.trim().length > 50) {
+            showCategoryError('Category name must be 50 characters or less')
             return
         }
 
         setAddingCategory(true)
-        setErrorMessage(null)
+        setCategoryError(null)
 
         const res = await fetch('/api/categories', {
             method: 'POST',
@@ -89,16 +117,16 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
         if (!res.ok) {
             const errorMsg = await parseError(res)
-            setErrorMessage(errorMsg)
+            showCategoryError(errorMsg)
             setAddingCategory(false)
             return
         }
 
         setNewCategoryName('')
-        setErrorMessage(null)
+        setCategoryError(null)
         await fetchMenu()
         setAddingCategory(false)
-        showSuccess('Category added successfully')
+        showCategorySuccess('Category added successfully')
     }
 
     const openDeleteModal = (category: Category) => {
@@ -110,7 +138,7 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         if (!categoryToDelete) return
 
         setDeletingCategoryId(categoryToDelete.id)
-        setErrorMessage(null)
+        setCategoryError(null)
         setDeleteModalOpen(false)
 
         const res = await fetch(`/api/categories/${categoryToDelete.id}`, {
@@ -119,35 +147,43 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
         if (!res.ok) {
             const errorMsg = await parseError(res)
-            setErrorMessage(errorMsg)
+            showCategoryError(errorMsg)
             setDeletingCategoryId(null)
             setCategoryToDelete(null)
             return
         }
 
-        setErrorMessage(null)
+        setCategoryError(null)
         await fetchMenu()
         setDeletingCategoryId(null)
         setCategoryToDelete(null)
-        showSuccess('Category deleted successfully')
+        showCategorySuccess('Category deleted successfully')
     }
 
     const handleAddItem = async () => {
         if (!newItemName.trim()) {
-            setErrorMessage('Item name is required')
+            showItemError('Item name is required')
+            return
+        }
+        if (newItemName.trim().length > 100) {
+            showItemError('Item name must be 100 characters or less')
             return
         }
         if (!newItemPrice || parseFloat(newItemPrice) <= 0) {
-            setErrorMessage('Price must be a positive number')
+            showItemError('Price must be a positive number')
+            return
+        }
+        if (parseFloat(newItemPrice) > 9999.99) {
+            showItemError('Price must be $9999.99 or less')
             return
         }
         if (!newItemCategoryId) {
-            setErrorMessage('Please select a category')
+            showItemError('Please select a category')
             return
         }
 
         setAddingItem(true)
-        setErrorMessage(null)
+        setItemError(null)
 
         const res = await fetch('/api/menu-items', {
             method: 'POST',
@@ -163,7 +199,7 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
         if (!res.ok) {
             const errorMsg = await parseError(res)
-            setErrorMessage(errorMsg)
+            showItemError(errorMsg)
             setAddingItem(false)
             return
         }
@@ -171,10 +207,10 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         setNewItemName('')
         setNewItemPrice('')
         setNewItemCategoryId('')
-        setErrorMessage(null)
+        setItemError(null)
         await fetchMenu()
         setAddingItem(false)
-        showSuccess('Menu item added successfully')
+        showItemSuccess('Menu item added successfully')
     }
 
     const handleToggleAvailability = async (item: MenuItem) => {
@@ -186,13 +222,34 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
         if (!res.ok) {
             const errorMsg = await parseError(res)
-            setErrorMessage(errorMsg)
+            showItemError(errorMsg)
             return
         }
 
-        setErrorMessage(null)
+        setItemError(null)
         fetchMenu()
-        showSuccess(`Item marked as ${!item.is_available ? 'available' : 'unavailable'}`)
+        showItemSuccess(`Item marked as ${!item.is_available ? 'available' : 'unavailable'}`)
+    }
+
+    const handleDeleteItem = async (itemId: string) => {
+        setDeletingItemId(itemId)
+        setItemError(null)
+
+        const res = await fetch(`/api/menu-items/${itemId}`, {
+            method: 'DELETE',
+        })
+
+        if (!res.ok) {
+            const errorMsg = await parseError(res)
+            showItemError(errorMsg)
+            setDeletingItemId(null)
+            return
+        }
+
+        setItemError(null)
+        await fetchMenu()
+        setDeletingItemId(null)
+        showItemSuccess('Menu item deleted successfully')
     }
 
     const uploadItemImage = async (itemId: string, file: File) => {
@@ -206,12 +263,19 @@ export default function MenuManagementTab({ restaurantId }: Props) {
         const uploadResponse = await fetch('/api/uploads', { method: 'POST', body: formData })
         if (!uploadResponse.ok) {
             const errorMsg = await parseError(uploadResponse)
-            setErrorMessage(errorMsg)
+            showItemError(errorMsg)
             setUploadingItemId(null)
             return
         }
 
-        const { publicUrl } = await uploadResponse.json()
+        const { data: uploadData } = await uploadResponse.json()
+        const publicUrl = uploadData?.publicUrl
+
+        if (!publicUrl) {
+            showItemError('Failed to get image URL')
+            setUploadingItemId(null)
+            return
+        }
 
         const updateResponse = await fetch(`/api/menu-items/${itemId}`, {
             method: 'PUT',
@@ -221,32 +285,20 @@ export default function MenuManagementTab({ restaurantId }: Props) {
 
         if (!updateResponse.ok) {
             const errorMsg = await parseError(updateResponse)
-            setErrorMessage(errorMsg)
+            showItemError(errorMsg)
             setUploadingItemId(null)
             return
         }
 
-        setErrorMessage(null)
+        setItemError(null)
         setUploadingItemId(null)
         fetchMenu()
-        showSuccess('Image uploaded successfully')
+        showItemSuccess('Image uploaded successfully')
     }
 
     return (
         <Card>
             <CardContent className="pt-4 md:pt-6">
-                {errorMessage && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-                        {errorMessage}
-                    </div>
-                )}
-
-                {successMessage && (
-                    <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
-                        {successMessage}
-                    </div>
-                )}
-
                 {/* Delete Confirmation Modal */}
                 {deleteModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -278,6 +330,16 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                 {/* Category Section */}
                 <div className="mb-4 md:mb-6">
                     <h3 className="text-base md:text-lg font-semibold mb-3">Categories</h3>
+                    {categoryError && (
+                        <div className="mb-3 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                            {categoryError}
+                        </div>
+                    )}
+                    {categorySuccess && (
+                        <div className="mb-3 p-3 bg-green-50 text-green-700 rounded-md text-sm">
+                            {categorySuccess}
+                        </div>
+                    )}
                     <div className="flex flex-col sm:flex-row gap-2 mb-3">
                         <Input
                             placeholder="New category name"
@@ -285,6 +347,7 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                             onChange={(e) => setNewCategoryName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && !addingCategory && handleAddCategory()}
                             disabled={addingCategory}
+                            maxLength={50}
                             className="flex-1"
                         />
                         <Button onClick={handleAddCategory} disabled={addingCategory || !newCategoryName.trim()}>
@@ -325,6 +388,16 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                 {/* Menu Items Section */}
                 <div>
                     <h3 className="text-base md:text-lg font-semibold mb-3">Menu Items</h3>
+                    {itemError && (
+                        <div className="mb-3 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+                            {itemError}
+                        </div>
+                    )}
+                    {itemSuccess && (
+                        <div className="mb-3 p-3 bg-green-50 text-green-700 rounded-md text-sm">
+                            {itemSuccess}
+                        </div>
+                    )}
                     <div className="flex flex-col gap-2 mb-3">
                         <div className="flex flex-col sm:flex-row gap-2">
                             <Input
@@ -332,6 +405,7 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                 value={newItemName}
                                 onChange={(e) => setNewItemName(e.target.value)}
                                 className="flex-1 min-w-[150px]"
+                                maxLength={100}
                                 disabled={addingItem}
                             />
                             <Input
@@ -341,6 +415,7 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                 onChange={(e) => setNewItemPrice(e.target.value)}
                                 className="w-full sm:w-32"
                                 min="0"
+                                max="9999.99"
                                 step="0.01"
                                 disabled={addingItem}
                             />
@@ -383,7 +458,7 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                                 alt={item.name}
                                                 width={40}
                                                 height={40}
-                                                className="rounded object-cover hidden sm:block"
+                                                className="rounded object-cover"
                                             />
                                         ) : null}
                                         <div>
@@ -422,6 +497,19 @@ export default function MenuManagementTab({ restaurantId }: Props) {
                                             {uploadingItemId === item.id ? 'Uploading...' : 'Upload image'}
                                         </span>
                                     </label>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteItem(item.id)}
+                                        disabled={deletingItemId === item.id}
+                                        className="text-xs ml-auto"
+                                    >
+                                        {deletingItemId === item.id ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                        )}
+                                    </Button>
                                 </div>
                             </div>
                         ))}

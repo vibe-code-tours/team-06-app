@@ -69,7 +69,7 @@ export default function Header() {
           <div className="flex items-center gap-4">
             {profile && (
               <>
-                <span className="text-sm text-gray-500 hidden sm:inline">
+                <span className="text-sm text-gray-500">
                   {formatRole(profile.role)}
                 </span>
                 <span className="text-sm font-medium text-gray-900">

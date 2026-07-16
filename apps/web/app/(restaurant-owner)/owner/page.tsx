@@ -162,7 +162,8 @@ export default function OwnerDashboard() {
       return;
     }
 
-    const { publicUrl } = await uploadResponse.json();
+    const { data } = await uploadResponse.json();
+    const publicUrl = data?.publicUrl;
 
     const updateResponse = await fetch(`/api/restaurants/${restaurantId}`, {
       method: 'PUT',
@@ -206,38 +207,44 @@ export default function OwnerDashboard() {
         )}
 
         {/* Header - Mobile: Stack, Desktop: Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
-          <div className="flex items-center gap-3">
-            {restaurant?.logo_url ? (
-              <Image
-                src={restaurant.logo_url}
-                alt={`${restaurant.name} logo`}
-                width={48}
-                height={48}
-                className="rounded object-cover"
-              />
-            ) : (
-              <Store className="h-10 w-10 md:h-12 md:w-12" />
-            )}
-            <div>
-              <h1 className="text-xl md:text-3xl font-bold">{restaurant?.name || 'My Restaurant'}</h1>
-              <p className="text-gray-500 text-sm md:text-base">Restaurant Owner Dashboard</p>
+        <div className="bg-brand-blue rounded-lg mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-5 sm:py-6 px-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              {restaurant?.logo_url ? (
+                <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/10 shrink-0 overflow-hidden">
+                  <Image
+                    src={restaurant.logo_url}
+                    alt={`${restaurant.name} logo`}
+                    width={48}
+                    height={48}
+                    className="rounded-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/10 text-white shrink-0">
+                  <Store className="h-5 w-5 sm:h-6 sm:w-6" />
+                </div>
+              )}
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white">{restaurant?.name || 'My Restaurant'}</h1>
+                <p className="text-sm text-white/60 mt-0.5">Restaurant Owner Dashboard</p>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col items-start sm:items-end">
-            <label className="inline-flex">
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
-                disabled={uploading}
-              />
-              <span className={`inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                {uploading ? 'Uploading...' : 'Upload Logo'}
-              </span>
-            </label>
-            <span className="text-xs text-gray-500 mt-1">PNG, JPG, or WebP (max 5MB)</span>
+            <div className="flex flex-col items-start sm:items-end">
+              <label className="inline-flex">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
+                  disabled={uploading}
+                />
+                <span className={`inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-white text-brand-blue hover:bg-white/90 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  {uploading ? 'Uploading...' : restaurant?.logo_url ? 'Change Logo' : 'Upload Logo'}
+                </span>
+              </label>
+              <span className="text-xs text-white/50 mt-1">PNG, JPG, or WebP (max 5MB)</span>
+            </div>
           </div>
         </div>
 
