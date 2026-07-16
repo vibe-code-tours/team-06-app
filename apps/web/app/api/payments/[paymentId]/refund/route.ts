@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { refundPaymentSchema } from '@restaurant-qr/shared'
 import { refundPayment } from '@/lib/services/paymentService'
 
-const ALLOWED_ROLES = ['manager', 'restaurant_owner', 'super_admin']
+const ALLOWED_ROLES = ['cashier', 'manager', 'restaurant_owner', 'super_admin']
 
 export async function POST(
     request: Request,

@@ -23,7 +23,7 @@ interface Order {
   created_at: string;
   table: {
     table_number: number;
-  }[];
+  };
   order_items: {
     quantity: number;
     unit_price: number;
@@ -85,20 +85,21 @@ export default function ManagerDashboard() {
         .order('created_at', { ascending: false });
 
       if (ordersData) {
-        setOrders(ordersData as unknown as Order[]);
+        const orders = ordersData as unknown as Order[];
+        setOrders(orders);
 
         // Calculate stats
-        const completed = ordersData.filter(
-          (o: Order) => o.status === 'COMPLETED'
+        const completed = orders.filter(
+          (o) => o.status === 'COMPLETED'
         );
-        const active = ordersData.filter(
-          (o: Order) =>
+        const active = orders.filter(
+          (o) =>
             o.status !== 'COMPLETED' && o.status !== 'CANCELLED'
         );
 
-        const totalRevenue = completed.reduce((sum: number, o: Order) => {
+        const totalRevenue = completed.reduce((sum, o) => {
           const orderTotal = o.order_items.reduce(
-            (itemSum: number, item: any) =>
+            (itemSum, item) =>
               itemSum + item.unit_price * item.quantity,
             0
           );
@@ -106,7 +107,7 @@ export default function ManagerDashboard() {
         }, 0);
 
         setStats({
-          totalOrders: ordersData.length,
+          totalOrders: orders.length,
           completedOrders: completed.length,
           activeOrders: active.length,
           totalRevenue,
@@ -267,7 +268,7 @@ export default function ManagerDashboard() {
                           <Receipt className="h-4 w-4" />
                         </div>
                         <div className="font-medium">
-                          Table {order.table[0]?.table_number}
+                          Table {order.table.table_number}
                         </div>
                         <div className="text-sm text-gray-500">
                           {new Date(order.created_at).toLocaleTimeString()}

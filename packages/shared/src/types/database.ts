@@ -552,7 +552,7 @@ export type Database = {
       }
     }
     Enums: {
-      order_payment_status: "UNPAID" | "PAID"
+      order_payment_status: "UNPAID" | "PAID" | "REFUNDED"
       order_status:
         | "PENDING"
         | "ACCEPTED"
@@ -702,7 +702,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      order_payment_status: ["UNPAID", "PAID"],
+      order_payment_status: ["UNPAID", "PAID", "REFUNDED"],
       order_status: [
         "PENDING",
         "ACCEPTED",
