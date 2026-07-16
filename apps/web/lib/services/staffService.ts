@@ -37,7 +37,7 @@ export async function inviteStaff(
     const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
         input.email,
         {
-            redirectTo: `${appUrl}/auth/callback`,
+            redirectTo: `${appUrl}/auth/accept-invite`,
             data: {
                 role: input.role,
                 restaurant_id: restaurantId,

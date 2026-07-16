@@ -1,5 +1,6 @@
 import { ok, err } from '@restaurant-qr/shared/http/apiResponse'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(request: Request) {
     const supabase = createClient()
@@ -28,5 +29,13 @@ export async function GET(request: Request) {
         return err('INTERNAL_ERROR', error.message, 500)
     }
 
-    return ok(data)
+    // Filter out profiles where auth user no longer exists
+    const adminClient = createAdminClient()
+    const { data: authUsers } = await adminClient.auth.admin.listUsers()
+
+    const validProfiles = (data ?? []).filter(profile =>
+        authUsers?.users?.some(authUser => authUser.email === profile.email)
+    )
+
+    return ok(validProfiles)
 }

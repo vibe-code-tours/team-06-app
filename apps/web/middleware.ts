@@ -1,43 +1,38 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: { headers: request.headers },
-  });
+  let response = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll().map(c => ({
+            name: c.name,
+            value: c.value,
+          }));
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({
-            request: { headers: request.headers },
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
           });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({
-            request: { headers: request.headers },
-          });
-          response.cookies.set({ name, value: '', ...options });
         },
       },
     }
   );
+
+  // Refresh session and apply to response
+  await supabase.auth.getSession();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/api/menu', '/qa-manual'];
+  const publicRoutes = ['/login', '/auth', '/api/menu', '/qa-manual'];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
@@ -83,14 +78,15 @@ export async function middleware(request: NextRequest) {
       }
 
       // Check role-based access
+      // /auth is included for all roles so staff can reach /auth/accept-invite
       const allowedRoutes: Record<string, string[]> = {
-        super_admin: ['/super-admin', '/api/admin'],
-        restaurant_owner: ['/owner', '/api/restaurants'],
-        manager: ['/manager', '/api/restaurants'],
-        kitchen_staff: ['/kitchen', '/api/orders'],
-        waiter: ['/staff', '/api/tables'],
-        cashier: ['/cashier', '/api/payments'],
-        customer: ['/'],
+        super_admin: ['/super-admin', '/api/admin', '/auth'],
+        restaurant_owner: ['/owner', '/api/restaurants', '/auth'],
+        manager: ['/manager', '/api/restaurants', '/auth'],
+        kitchen_staff: ['/kitchen', '/api/orders', '/auth'],
+        waiter: ['/staff', '/api/tables', '/auth'],
+        cashier: ['/cashier', '/api/payments', '/auth'],
+        customer: ['/', '/auth'],
       };
 
       const allowed = allowedRoutes[profile.role] || [];

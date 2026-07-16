@@ -97,14 +97,28 @@ export default function StaffManagementTab({ restaurantId }: Props) {
         }
     }
 
+    const show_error = (message: string | null) => {
+        setErrorMessage(message)
+        if (message) {
+            setTimeout(() => setErrorMessage(null), 5000)
+        }
+    }
+
+    const show_success = (message: string | null) => {
+        setSuccessMessage(message)
+        if (message) {
+            setTimeout(() => setSuccessMessage(null), 5000)
+        }
+    }
+
     const handleInvite = async () => {
         if (!inviteEmail.trim()) {
-            setErrorMessage('Email is required')
+            show_error('Email is required')
             return
         }
 
         if (!isValidEmail(inviteEmail.trim())) {
-            setErrorMessage('Please enter a valid email address')
+            show_error('Please enter a valid email address')
             return
         }
 
@@ -123,12 +137,12 @@ export default function StaffManagementTab({ restaurantId }: Props) {
 
         if (!res.ok) {
             const errorMsg = await parseError(res)
-            setErrorMessage(errorMsg)
+            show_error(errorMsg)
             setInviting(false)
             return
         }
 
-        setSuccessMessage(`Invite sent to ${inviteEmail.trim()}`)
+        show_success(`Invite sent to ${inviteEmail.trim()}`)
         setInviteEmail('')
         setInviteRole('waiter')
         setInviting(false)
@@ -148,12 +162,12 @@ export default function StaffManagementTab({ restaurantId }: Props) {
 
         if (!res.ok) {
             const errorMsg = await parseError(res)
-            setErrorMessage(errorMsg)
+            show_error(errorMsg)
             setCancellingId(null)
             return
         }
 
-        setSuccessMessage('Invite cancelled')
+        show_success('Invite cancelled')
         setCancellingId(null)
         fetchPendingInvites()
     }
@@ -169,12 +183,12 @@ export default function StaffManagementTab({ restaurantId }: Props) {
 
         if (!res.ok) {
             const errorMsg = await parseError(res)
-            setErrorMessage(errorMsg)
+            show_error(errorMsg)
             setResendingId(null)
             return
         }
 
-        setSuccessMessage('Invite resent successfully')
+        show_success('Invite resent successfully')
         setResendingId(null)
         fetchPendingInvites()
     }

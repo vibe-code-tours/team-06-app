@@ -67,7 +67,7 @@ export async function POST(
     const { error } = await adminClient.auth.admin.inviteUserByEmail(
         invite.email,
         {
-            redirectTo: `${appUrl}/auth/callback`,
+            redirectTo: `${appUrl}/auth/accept-invite`,
             data: {
                 role: invite.role,
                 restaurant_id: invite.restaurant_id,
