@@ -66,6 +66,8 @@ export default function StaffManagementTab({ restaurantId }: Props) {
     const [inviting, setInviting] = useState(false)
     const [cancellingId, setCancellingId] = useState<string | null>(null)
     const [resendingId, setResendingId] = useState<string | null>(null)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [staffToDelete, setStaffToDelete] = useState<StaffRow | null>(null)
 
     const fetchStaff = async () => {
         const res = await fetch(`/api/staff?restaurant_id=${restaurantId}`)
@@ -193,7 +195,33 @@ export default function StaffManagementTab({ restaurantId }: Props) {
         fetchPendingInvites()
     }
 
+    const handleDeleteStaff = async (staffMember: StaffRow) => {
+        // Prevent self-deletion
+        // (This is also checked server-side, but we block it here for better UX)
+        setDeletingId(staffMember.id)
+        setErrorMessage(null)
+        setSuccessMessage(null)
+
+        const res = await fetch(`/api/staff/${staffMember.id}`, {
+            method: 'DELETE',
+        })
+
+        if (!res.ok) {
+            const errorMsg = await parseError(res)
+            show_error(errorMsg)
+            setDeletingId(null)
+            setStaffToDelete(null)
+            return
+        }
+
+        show_success(`${staffMember.full_name || staffMember.email} has been removed`)
+        setDeletingId(null)
+        setStaffToDelete(null)
+        fetchStaff()
+    }
+
     return (
+        <>
         <Card>
             <CardContent className="pt-6">
                 {errorMessage && (
@@ -442,21 +470,38 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                                             {member.email}
                                         </div>
                                     </div>
-                                    <span className={`text-xs px-2 py-1 rounded ml-2 flex-shrink-0 ${
-                                        member.role === 'restaurant_owner'
-                                            ? 'bg-orange-100 text-orange-700 font-semibold'
-                                            : member.role === 'manager'
-                                            ? 'bg-blue-100 text-blue-700 font-semibold'
-                                            : member.role === 'kitchen_staff'
-                                            ? 'bg-purple-100 text-purple-700 font-semibold'
-                                            : member.role === 'waiter'
-                                            ? 'bg-green-100 text-green-700 font-semibold'
-                                            : member.role === 'cashier'
-                                            ? 'bg-yellow-100 text-yellow-700 font-semibold'
-                                            : 'bg-gray-100'
-                                    }`}>
-                                        {member.role === 'restaurant_owner' ? 'Owner' : ROLES.find(r => r.value === member.role)?.label || member.role.replace('_', ' ')}
-                                    </span>
+                                    <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                                        <span className={`text-xs px-2 py-1 rounded ${
+                                            member.role === 'restaurant_owner'
+                                                ? 'bg-orange-100 text-orange-700 font-semibold'
+                                                : member.role === 'manager'
+                                                ? 'bg-blue-100 text-blue-700 font-semibold'
+                                                : member.role === 'kitchen_staff'
+                                                ? 'bg-purple-100 text-purple-700 font-semibold'
+                                                : member.role === 'waiter'
+                                                ? 'bg-green-100 text-green-700 font-semibold'
+                                                : member.role === 'cashier'
+                                                ? 'bg-yellow-100 text-yellow-700 font-semibold'
+                                                : 'bg-gray-100'
+                                        }`}>
+                                            {member.role === 'restaurant_owner' ? 'Owner' : ROLES.find(r => r.value === member.role)?.label || member.role.replace('_', ' ')}
+                                        </span>
+                                        {member.role !== 'restaurant_owner' && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => setStaffToDelete(member)}
+                                                disabled={deletingId === member.id}
+                                                className="text-xs text-red-600 hover:text-red-700"
+                                            >
+                                                {deletingId === member.id ? (
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                ) : (
+                                                    <Trash2 className="h-3 w-3" />
+                                                )}
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </>
@@ -464,5 +509,55 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                 </div>
             </CardContent>
         </Card>
+
+        {/* Delete Confirmation Modal */}
+        {staffToDelete && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <Card className="w-full max-w-md mx-4">
+                    <CardContent className="pt-6">
+                        <div className="text-center">
+                            <div className="text-4xl mb-4">⚠️</div>
+                            <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Staff Member</h2>
+                            <p className="text-gray-600 mb-2">
+                                Are you sure you want to delete{' '}
+                                <span className="font-semibold">
+                                    {staffToDelete.full_name || staffToDelete.email}
+                                </span>
+                                ?
+                            </p>
+                            <p className="text-sm text-red-600 mb-6">
+                                This action cannot be undone. The staff member will lose access to the system.
+                            </p>
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setStaffToDelete(null)}
+                                    disabled={deletingId === staffToDelete.id}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => handleDeleteStaff(staffToDelete)}
+                                    disabled={deletingId === staffToDelete.id}
+                                    className="flex-1"
+                                >
+                                    {deletingId === staffToDelete.id ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        'Delete'
+                                    )}
+                                </Button>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
+        </>
     )
 }
