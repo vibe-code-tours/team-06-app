@@ -9,6 +9,8 @@ import {
   UtensilsCrossed,
   Users,
   BarChart3,
+  ImagePlus,
+  Loader2,
 } from 'lucide-react';
 import MenuManagementTab from './MenuManagementTab';
 import Image from 'next/image';
@@ -185,30 +187,18 @@ export default function OwnerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {errorMessage && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-            {errorMessage}
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
-            {successMessage}
-          </div>
-        )}
-
-        {/* Header - Mobile: Stack, Desktop: Row */}
-        <div className="bg-brand-blue rounded-lg mb-6 md:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-5 sm:py-6 px-4 sm:px-6">
+    <div className="min-h-screen bg-gray-50 pb-12">
+      {/* Header */}
+      <div className="bg-brand-blue">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
               {restaurant?.logo_url ? (
                 <div className="flex items-center justify-center h-11 w-11 sm:h-12 sm:w-12 rounded-full bg-white/10 shrink-0 overflow-hidden">
@@ -230,7 +220,7 @@ export default function OwnerDashboard() {
                 <p className="text-sm text-white/60 mt-0.5">Restaurant Owner Dashboard</p>
               </div>
             </div>
-            <div className="flex flex-col items-start sm:items-end">
+            <div className="flex flex-col items-start sm:items-end gap-1">
               <label className="inline-flex">
                 <input
                   type="file"
@@ -239,44 +229,68 @@ export default function OwnerDashboard() {
                   onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
                   disabled={uploading}
                 />
-                <span className={`inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-white text-brand-blue hover:bg-white/90 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                  {uploading ? 'Uploading...' : restaurant?.logo_url ? 'Change Logo' : 'Upload Logo'}
+                <span className={`flex items-center justify-center h-10 w-10 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ImagePlus className="h-4 w-4" />
+                  )}
                 </span>
               </label>
-              <span className="text-xs text-white/50 mt-1">PNG, JPG, or WebP (max 5MB)</span>
+              <span className="text-xs text-white/50">PNG, JPG, or WebP (max 5MB)</span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Stats - Mobile: 2 cols, Desktop: 4 cols */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
+            {errorMessage}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
+            {successMessage}
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-              <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-600">Total Orders</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
+                <UtensilsCrossed className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+              <div className="text-2xl font-bold text-brand-blue">{stats.totalOrders}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-600">Active Orders</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-orange/10 text-brand-orange shrink-0">
+                <BarChart3 className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activeOrders}</div>
+              <div className="text-2xl font-bold text-brand-orange">{stats.activeOrders}</div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-600">Total Revenue</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 shrink-0">
+                <BarChart3 className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold text-emerald-600">
                 ${stats.totalRevenue.toFixed(2)}
               </div>
             </CardContent>
@@ -284,32 +298,40 @@ export default function OwnerDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-gray-600">Total Staff</CardTitle>
+              <div className="flex items-center justify-center h-8 w-8 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
+                <Users className="h-4 w-4" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStaff}</div>
+              <div className="text-2xl font-bold text-brand-blue">{stats.totalStaff}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Quick Actions */}
-        <Tabs defaultValue="menu" className="space-y-4 md:space-y-6">
-          <TabsList className="flex w-full md:w-auto">
-            <TabsTrigger value="menu" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm flex-1 md:flex-none justify-center">
-              <UtensilsCrossed className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="md:hidden">Menu</span>
-              <span className="hidden md:inline">Menu Management</span>
+        <Tabs defaultValue="menu" className="space-y-6">
+          <TabsList className="flex w-full bg-white border border-gray-200 rounded-2xl p-1.5 shadow-sm">
+            <TabsTrigger
+              value="menu"
+              className="flex items-center gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
+            >
+              <UtensilsCrossed className="h-4 w-4" />
+              Menu Management
             </TabsTrigger>
-            <TabsTrigger value="tables" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm flex-1 md:flex-none justify-center">
-              <Store className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="md:hidden">Tables</span>
-              <span className="hidden md:inline">Table Management</span>
+            <TabsTrigger
+              value="tables"
+              className="flex items-center gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
+            >
+              <Store className="h-4 w-4" />
+              Table Management
             </TabsTrigger>
-            <TabsTrigger value="staff" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm flex-1 md:flex-none justify-center">
-              <Users className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="md:hidden">Staff</span>
-              <span className="hidden md:inline">Staff Management</span>
+            <TabsTrigger
+              value="staff"
+              className="flex items-center gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
+            >
+              <Users className="h-4 w-4" />
+              Staff Management
             </TabsTrigger>
           </TabsList>
 

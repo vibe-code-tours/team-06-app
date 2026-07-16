@@ -2,6 +2,8 @@
 
 A complete QR-based ordering platform where customers scan a table QR code, browse the menu, place orders, and pay — all from their phone. Staff manage orders through dedicated dashboards with real-time updates.
 
+🔗 **Live Demo:** https://team-06-app.netlify.app
+
 ## Tech Stack
 
 - **Frontend**: Next.js 14 (App Router)
@@ -161,8 +163,8 @@ tests, `supabase stop` — see `.github/workflows/ci.yml`.
 | Super Admin      | All restaurants, full system management       |
 | Restaurant Owner | Own restaurant settings, menu, staff, reports |
 | Manager          | Orders, staff scheduling, reports             |
-| Kitchen Staff    | Kitchen display, order status updates         |
-| Waiter           | Table management, order assistance            |
+| Kitchen Staff    | Kitchen dashboard, order status updates         |
+| Waiter           | Table dashboard, order assistance            |
 | Cashier          | Payment processing, bill confirmation         |
 | Customer         | Menu browsing, order placement                |
 
@@ -219,10 +221,10 @@ See `supabase/migrations/20250706000000_initial_schema.sql` for the complete sch
 
 ## Deployment
 
-### Vercel (Frontend)
+### netlify (Frontend)
 
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
+1. Connect your GitHub repository to Netlify
+2. Set environment variables in Netlify dashboard
 3. Deploy
 
 ### Supabase (Backend)

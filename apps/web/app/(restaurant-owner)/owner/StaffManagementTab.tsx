@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, Trash2, RefreshCw } from 'lucide-react'
+import { Loader2, Trash2, RefreshCw, Shield, ChevronDown } from 'lucide-react'
 
 interface StaffRow {
     id: string
@@ -248,18 +248,28 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                         disabled={inviting}
                     />
                     <div className="flex gap-2 min-w-0">
-                        <select
-                            value={inviteRole}
-                            onChange={(e) => setInviteRole(e.target.value)}
-                            className="flex h-10 flex-1 min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm"
-                            disabled={inviting}
-                        >
-                            {ROLES.map((role) => (
-                                <option key={role.value} value={role.value}>
-                                    {role.label} — {role.description}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="relative flex-1 group">
+                            <Shield className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-brand-blue transition-colors pointer-events-none" />
+                            <select
+                                value={inviteRole}
+                                onChange={(e) => setInviteRole(e.target.value)}
+                                className={`flex h-11 w-full rounded-xl border bg-white pl-9 pr-10 py-2 text-sm appearance-none cursor-pointer transition-all outline-none ${
+                                    inviteRole
+                                        ? 'border-brand-blue/30 text-gray-900 font-medium'
+                                        : 'border-gray-200 text-gray-500'
+                                } hover:border-gray-300 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10`}
+                                disabled={inviting}
+                            >
+                                {ROLES.map((role) => (
+                                    <option key={role.value} value={role.value}>
+                                        {role.label} — {role.description}
+                                    </option>
+                                ))}
+                            </select>
+                            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none transition-colors ${
+                                inviteRole ? 'text-brand-blue' : 'text-gray-400'
+                            }`} />
+                        </div>
                         <Button onClick={handleInvite} disabled={inviting || !inviteEmail.trim()} className="flex-shrink-0">
                             {inviting ? (
                                 <>

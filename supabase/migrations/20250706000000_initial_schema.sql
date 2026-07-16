@@ -24,8 +24,8 @@ CREATE TYPE public.user_role AS ENUM (
     'super_admin',      -- Full system access across all restaurants
     'restaurant_owner', -- Own restaurant settings, menu, staff, reports
     'manager',          -- Orders, staff scheduling, reports within restaurant
-    'kitchen_staff',    -- Kitchen display, order status updates only
-    'waiter',           -- Table management, order assistance
+    'kitchen_staff',    -- Kitchen dashboard, order status updates only
+    'waiter',           -- Table dashboard, order assistance
     'cashier',          -- Payment processing, bill confirmation
     'customer'          -- Menu browsing, order placement (guest)
 );
@@ -1530,7 +1530,7 @@ COMMENT ON FUNCTION public.handle_new_user() IS
 -- Enable Supabase Realtime on tables that need live updates.
 -- =============================================================================
 
--- Orders: Kitchen display needs real-time order updates
+-- Orders: Kitchen dashboard needs real-time order updates
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 
 -- Tables: Staff dashboard needs real-time table status updates

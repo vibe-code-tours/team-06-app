@@ -15,6 +15,7 @@ import {
   QrCode,
   DoorOpen,
   Circle,
+  X,
 } from 'lucide-react';
 import { useRealtimeWithPolling } from '@/hooks/useRealtimeWithPolling';
 
@@ -80,6 +81,7 @@ export default function StaffDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [qrModal, setQrModal] = useState<{ tableNumber: number; dataUrl: string } | null>(null);
   const supabase = createClient();
 
   const fetchData = async () => {
@@ -156,7 +158,7 @@ export default function StaffDashboard() {
     fetchData();
   };
 
-  const downloadQr = async (tableId: string, tableNumber: number) => {
+  const showQr = async (tableId: string, tableNumber: number) => {
     const response = await fetch(`/api/tables/${tableId}/qr`);
 
     if (!response.ok) {
@@ -165,10 +167,7 @@ export default function StaffDashboard() {
     }
 
     const { data } = await response.json() as { data: { dataUrl: string } };
-    const link = document.createElement('a');
-    link.href = data.dataUrl;
-    link.download = `table-${tableNumber}-qr.png`;
-    link.click();
+    setQrModal({ tableNumber, dataUrl: data.dataUrl });
   };
 
   if (loading) {
@@ -325,10 +324,10 @@ export default function StaffDashboard() {
                           size="sm"
                           variant="outline"
                           className="mt-2 w-full h-11 sm:h-9 bg-white/70"
-                          onClick={() => downloadQr(table.id, table.table_number)}
+                          onClick={() => showQr(table.id, table.table_number)}
                         >
                           <QrCode className="h-4 w-4 mr-1.5" />
-                          Download QR
+                          Show QR
                         </Button>
                       </div>
                     </CardContent>
@@ -453,6 +452,44 @@ export default function StaffDashboard() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* QR Modal */}
+        {qrModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setQrModal(null)} />
+            <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-11/12 mx-4">
+              <button
+                onClick={() => setQrModal(null)}
+                className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <div className="text-center">
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">Table {qrModal.tableNumber}</h3>
+                <p className="text-sm text-gray-500 mb-4">Scan to order</p>
+                <div className="flex justify-center mb-4">
+                  <img
+                    src={qrModal.dataUrl}
+                    alt={`QR Code for Table ${qrModal.tableNumber}`}
+                    className="w-48 h-48 rounded-xl"
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = qrModal.dataUrl;
+                    link.download = `table-${qrModal.tableNumber}-qr.png`;
+                    link.click();
+                  }}
+                >
+                  Download QR
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

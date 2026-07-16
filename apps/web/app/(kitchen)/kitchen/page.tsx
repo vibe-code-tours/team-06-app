@@ -162,7 +162,7 @@ export default function KitchenDashboard() {
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-white">
-                Kitchen Display
+                Kitchen Dashboard
               </h1>
               <p className="text-sm text-white/60 mt-0.5">
                 {orders.length} active order{orders.length !== 1 ? "s" : ""}
@@ -271,7 +271,7 @@ export default function KitchenDashboard() {
                     <div className="flex gap-2">
                       {nextStatus[order.status] && (
                         <Button
-                          className="flex-1 min-w-0 bg-brand-orange hover:bg-brand-orange/90 text-white font-semibold py-5 rounded-xl"
+                          className="flex-1 min-w-0 bg-brand-orange hover:bg-orange-600 text-white font-semibold py-5 rounded-xl transition-colors"
                           onClick={() =>
                             updateOrderStatus(
                               order.id,
@@ -296,7 +296,7 @@ export default function KitchenDashboard() {
                         order.status !== "CANCELLED" && (
                           <Button
                             variant="outline"
-                            className="flex-1 min-w-0 py-5 rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            className="flex-1 min-w-0 py-5 rounded-xl border-red-200 text-red-600 hover:bg-red-100 hover:text-red-800 transition-colors"
                             onClick={() => setRejectingOrderId(order.id)}
                             disabled={updatingOrderId === order.id}
                             aria-label="Reject order"

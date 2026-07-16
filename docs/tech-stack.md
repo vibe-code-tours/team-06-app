@@ -56,9 +56,9 @@ app/
 ├── (super-admin)/super-admin/         # Super Admin dashboard
 ├── (restaurant-owner)/owner/          # Restaurant Owner dashboard
 ├── (manager)/manager/                 # Manager dashboard
-├── (kitchen)/kitchen/                 # Kitchen display
+├── (kitchen)/kitchen/                 # Kitchen dashboard
 ├── (staff)/staff/                     # Staff/Waiter dashboard
-├── (cashier)/cashier/                 # Cashier payment terminal
+├── (cashier)/cashier/                 # Cashier payment dashboard
 ├── (customer)/[restaurantId]/[tableNumber]/  # Customer menu view
 ├── api/                               # API route handlers
 └── layout.tsx                         # Root layout
@@ -132,11 +132,11 @@ app/
 
 | Service         | Platform          |
 | --------------- | ----------------- |
-| Frontend        | Vercel            |
+| Frontend        | Netlify            |
 | Backend         | Supabase Cloud    |
 | Database        | Supabase PostgreSQL |
 | Storage         | Supabase Storage  |
-| CDN             | Vercel Edge Network |
+| CDN             | Netlify Edge Network |
 
 ---
 

@@ -87,7 +87,7 @@ function CashierDashboardContent() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [taxRate, setTaxRate] = useState(0);
+  const [taxRate, setTaxRate] = useState<number | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [recentPayments, setRecentPayments] = useState<RecentPayment[]>([]);
@@ -132,14 +132,20 @@ function CashierDashboardContent() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) {
+      setTaxRate(0);
+      return;
+    }
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("restaurant_id")
       .eq("id", user.id)
       .single();
-    if (!profile?.restaurant_id) return;
+    if (!profile?.restaurant_id) {
+      setTaxRate(0);
+      return;
+    }
 
     const { data: restaurant } = await supabase
       .from("restaurants")
@@ -148,6 +154,8 @@ function CashierDashboardContent() {
       .single();
     if (restaurant) {
       setTaxRate(Number(restaurant.tax_rate));
+    } else {
+      setTaxRate(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -168,9 +176,15 @@ function CashierDashboardContent() {
   }, []);
 
   useEffect(() => {
-    fetchOrders();
-    fetchTaxRate();
-    fetchRecentPayments();
+    const init = async () => {
+      await Promise.all([
+        fetchOrders(),
+        fetchTaxRate(),
+        fetchRecentPayments(),
+      ]);
+      setLoading(false);
+    };
+    init();
   }, [fetchOrders, fetchTaxRate, fetchRecentPayments]);
 
   useEffect(() => {
@@ -201,7 +215,7 @@ function CashierDashboardContent() {
       (sum, item) => sum + item.unit_price * item.quantity,
       0,
     );
-    const tax = subtotal * taxRate;
+    const tax = subtotal * (taxRate / 100);
     const discount = Math.min(discountAmount, subtotal + tax);
     const total = subtotal + tax - discount;
 
@@ -273,7 +287,7 @@ function CashierDashboardContent() {
     fetchRecentPayments();
   };
 
-  if (loading) {
+  if (loading || taxRate === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-brand-blue/5 to-transparent">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue"></div>
@@ -291,7 +305,7 @@ function CashierDashboardContent() {
               <CreditCard className="h-5 w-5 sm:h-6 sm:w-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white">Cashier Terminal</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-white">Cashier Dashbord</h1>
               <p className="text-sm text-white/60 mt-0.5">
                 {orders.length} order{orders.length !== 1 ? "s" : ""} awaiting payment
               </p>
@@ -427,12 +441,6 @@ function CashierDashboardContent() {
                         ${calculateSummary(selectedOrder).subtotal.toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
-                      <span>
-                        ${calculateSummary(selectedOrder).tax.toFixed(2)}
-                      </span>
-                    </div>
                     {calculateSummary(selectedOrder).discount > 0 && (
                       <div className="flex justify-between text-sm text-green-700">
                         <span>Discount</span>
@@ -442,6 +450,12 @@ function CashierDashboardContent() {
                         </span>
                       </div>
                     )}
+                    <div className="flex justify-between text-sm">
+                      <span>Tax ({(taxRate ?? 0).toFixed(1)}%)</span>
+                      <span>
+                        ${calculateSummary(selectedOrder).tax.toFixed(2)}
+                      </span>
+                    </div>
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
                       <span className="text-brand-blue">

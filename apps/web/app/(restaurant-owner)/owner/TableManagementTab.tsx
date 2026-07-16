@@ -5,7 +5,7 @@ import type { Table } from '@restaurant-qr/shared'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Trash2, Loader2, X } from 'lucide-react'
+import { Trash2, Loader2, X, Plus, Armchair } from 'lucide-react'
 
 interface Props {
     restaurantId: string
@@ -39,7 +39,6 @@ export default function TableManagementTab({ restaurantId }: Props) {
             const body = await res.json()
             const message = body?.error?.message || body?.message || `Request failed (${res.status})`
 
-            // Transform raw DB errors to friendly messages
             if (message.includes('unique constraint') || message.includes('duplicate key')) {
                 return 'A table with this number already exists'
             }
@@ -129,137 +128,172 @@ export default function TableManagementTab({ restaurantId }: Props) {
         showSuccess('Table deleted successfully')
     }
 
+    const getStatusStyle = (status: string) => {
+        switch (status) {
+            case 'AVAILABLE':
+                return 'bg-emerald-100 text-emerald-700'
+            case 'OCCUPIED':
+                return 'bg-red-100 text-red-700'
+            case 'WAITING_PAYMENT':
+                return 'bg-amber-100 text-amber-700'
+            case 'CLEANING':
+                return 'bg-blue-100 text-blue-700'
+            default:
+                return 'bg-gray-100 text-gray-700'
+        }
+    }
+
     return (
-        <Card>
-            <CardContent className="pt-6">
-                {errorMessage && (
-                    <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md text-sm">
-                        {errorMessage}
-                    </div>
-                )}
-
-                {successMessage && (
-                    <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-md text-sm">
-                        {successMessage}
-                    </div>
-                )}
-
-                {/* Delete Confirmation Modal */}
-                {deleteModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center">
-                        <div className="fixed inset-0 bg-black/50" onClick={() => setDeleteModalOpen(false)} />
-                        <div className="relative bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
-                            <button
-                                onClick={() => setDeleteModalOpen(false)}
-                                className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
-                            >
-                                <X className="h-4 w-4" />
-                            </button>
-                            <h3 className="text-lg font-semibold mb-2">Delete Table</h3>
-                            <p className="text-gray-600 mb-6">
-                                Are you sure you want to delete Table #{tableToDelete?.table_number}?
-                                This action cannot be undone.
-                            </p>
-                            <div className="flex justify-end gap-2">
-                                <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
-                                    Cancel
-                                </Button>
-                                <Button variant="destructive" onClick={handleDeleteTable}>
-                                    Delete
-                                </Button>
-                            </div>
+        <div className="space-y-6">
+            {/* Delete Confirmation Modal */}
+            {deleteModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDeleteModalOpen(false)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-md w-11/12 mx-4">
+                        <button
+                            onClick={() => setDeleteModalOpen(false)}
+                            className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                        <div className="flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-red-600 mx-auto mb-4">
+                            <Trash2 className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-center mb-2">Delete Table</h3>
+                        <p className="text-gray-500 text-center mb-6">
+                            Are you sure you want to delete Table #{tableToDelete?.table_number}?
+                            This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button variant="outline" onClick={() => setDeleteModalOpen(false)} className="flex-1">
+                                Cancel
+                            </Button>
+                            <Button variant="destructive" onClick={handleDeleteTable} className="flex-1">
+                                Delete
+                            </Button>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Add Table Form */}
-                <div className="flex flex-col sm:flex-row gap-2 mb-4 md:mb-6">
-                    <div className="flex gap-2">
-                        <Input
-                            type="number"
-                            placeholder="Table No."
-                            value={newTableNumber}
-                            onChange={(e) => setNewTableNumber(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && !addingTable && handleAddTable()}
-                            className="w-24 sm:w-32"
-                            disabled={addingTable}
-                        />
-                        <div className="flex flex-col">
+            <Card className="border-gray-200 shadow-sm">
+                <CardContent className="pt-6">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-brand-blue/10 text-brand-blue">
+                            <Armchair className="h-4 w-4" />
+                        </div>
+                        <h3 className="text-base font-semibold text-gray-900">Tables</h3>
+                        <span className="text-xs text-gray-400 ml-auto">{tables.length} total</span>
+                    </div>
+
+                    {errorMessage && (
+                        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100">
+                            {errorMessage}
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-xl text-sm border border-emerald-100">
+                            {successMessage}
+                        </div>
+                    )}
+
+                    {/* Add Table Form */}
+                    <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                        <div className="flex gap-3">
+                            <Input
+                                type="number"
+                                placeholder="Table No."
+                                value={newTableNumber}
+                                onChange={(e) => setNewTableNumber(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && !addingTable && handleAddTable()}
+                                className="w-24 sm:w-32 border-gray-200 focus:border-brand-blue focus:ring-brand-blue/20"
+                                disabled={addingTable}
+                            />
                             <Input
                                 type="number"
                                 placeholder="Seats"
                                 value={newTableCapacity}
                                 onChange={(e) => setNewTableCapacity(e.target.value)}
-                                className="w-20 sm:w-24"
+                                className="w-20 sm:w-24 border-gray-200 focus:border-brand-blue focus:ring-brand-blue/20"
                                 min="1"
                                 disabled={addingTable}
                             />
-                            <span className="text-xs text-gray-500 mt-1">Seats</span>
                         </div>
-                    </div>
-                    <Button onClick={handleAddTable} disabled={addingTable || !newTableNumber} className="w-full sm:w-auto">
-                        {addingTable ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Adding...
-                            </>
-                        ) : (
-                            'Add Table'
-                        )}
-                    </Button>
-                </div>
-
-                {/* Table Grid - Mobile: 2 cols, Desktop: 4 cols */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    {tables.map((table) => (
-                        <div
-                            key={table.id}
-                            className="border rounded-lg p-3 md:p-4 text-center"
+                        <Button
+                            onClick={handleAddTable}
+                            disabled={addingTable || !newTableNumber}
+                            className="bg-brand-blue hover:bg-brand-blue/90 text-white"
                         >
-                            <div className="text-xl md:text-2xl font-bold mb-1">
-                                {table.table_number}
-                            </div>
-                            {table.name && (
-                                <div className="text-sm text-gray-500 mb-1">
-                                    {table.name}
-                                </div>
+                            {addingTable ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Plus className="h-4 w-4" />
                             )}
-                            <div className="text-xs text-gray-400 mb-2">
-                                Capacity: {table.capacity}
-                            </div>
-                            <div
-                                className={`text-xs px-2 py-1 rounded mb-2 ${
-                                    table.status === 'AVAILABLE'
-                                        ? 'bg-green-100 text-green-700'
-                                        : table.status === 'OCCUPIED'
-                                        ? 'bg-red-100 text-red-700'
-                                        : 'bg-yellow-100 text-yellow-700'
-                                }`}
-                            >
-                                {table.status}
-                            </div>
-                            {table.status === 'AVAILABLE' && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => openDeleteModal(table)}
-                                    disabled={deletingTableId === table.id}
-                                    className="w-full"
+                        </Button>
+                    </div>
+
+                    {/* Table Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        {tables.map((table) => {
+                            const statusColor = table.status === 'AVAILABLE'
+                                ? 'border-t-emerald-500'
+                                : table.status === 'OCCUPIED'
+                                ? 'border-t-red-500'
+                                : table.status === 'WAITING_PAYMENT'
+                                ? 'border-t-amber-500'
+                                : 'border-t-blue-500'
+
+                            return (
+                                <div
+                                    key={table.id}
+                                    className={`relative p-4 bg-white rounded-xl border border-gray-200 border-t-4 ${statusColor} hover:shadow-md transition-all group`}
                                 >
-                                    {deletingTableId === table.id ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <Trash2 className="h-4 w-4 text-red-500 mr-1" />
-                                            Delete
-                                        </>
+                                    {table.status === 'AVAILABLE' && (
+                                        <button
+                                            onClick={() => openDeleteModal(table)}
+                                            disabled={deletingTableId === table.id}
+                                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-all p-1 rounded-lg hover:bg-red-50"
+                                        >
+                                            {deletingTableId === table.id ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            )}
+                                        </button>
                                     )}
-                                </Button>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
+                                    <div className="text-center pt-1">
+                                        <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-gray-100 mx-auto mb-2">
+                                            <span className="text-xl font-bold text-gray-900">{table.table_number}</span>
+                                        </div>
+                                        {table.name && (
+                                            <div className="text-xs font-medium text-gray-600 mb-1">
+                                                {table.name}
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mb-3">
+                                            <Armchair className="h-3 w-3" />
+                                            {table.capacity} seats
+                                        </div>
+                                        <span
+                                            className={`inline-block text-xs px-3 py-1 rounded-full font-medium ${getStatusStyle(table.status)}`}
+                                        >
+                                            {table.status.replace('_', ' ')}
+                                        </span>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                        {tables.length === 0 && (
+                            <div className="col-span-full text-center py-8">
+                                <Armchair className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                                <p className="text-sm text-gray-400">No tables yet</p>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
     )
 }

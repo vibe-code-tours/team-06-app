@@ -13,8 +13,8 @@ A complete QR-based ordering platform where customers scan a table QR code, brow
 | Super Admin        | All restaurants, full system management       |
 | Restaurant Owner   | Own restaurant settings, menu, staff, reports |
 | Manager            | Orders, staff scheduling, reports             |
-| Kitchen Staff      | Kitchen display, order status updates         |
-| Waiter/Staff       | Table management, order assistance            |
+| Kitchen Staff      | Kitchen Dashboard, order status updates         |
+| Waiter/Staff       | Table Dashboard, order assistance            |
 | Cashier            | Payment processing, bill confirmation         |
 | Customer (Guest)   | Menu browsing, order placement, bill request  |
 
@@ -118,7 +118,7 @@ PENDING → ACCEPTED → PREPARING → READY → COMPLETED
 **Realtime Subscription:** `orders` table filtered by `restaurant_id` and status changes.
 
 **User Flow:**
-1. Kitchen display shows new orders at top with highlight
+1. Kitchen dashobord shows new orders at top with highlight
 2. Kitchen staff clicks "Accept" → status changes to ACCEPTED
 3. Staff clicks "Preparing" → status changes to PREPARING
 4. Staff clicks "Ready" → status changes to READY, alert sent to staff
@@ -428,7 +428,7 @@ RLS Policies
 
 ### Responsive Design
 - Mobile-first for customer menu (primary use case)
-- Tablet-optimized for kitchen display
+- Tablet-optimized for kitchen dashbord
 - Desktop-optimized for admin/management dashboards
 
 ### Real-time Updates
@@ -591,7 +591,7 @@ RLS Policies
 ### Cross-Cutting
 
 - [ ] Mobile-first responsive design on customer menu
-- [ ] Tablet-optimized kitchen display
+- [ ] Tablet-optimized kitchen dashboard
 - [ ] Desktop-optimized admin dashboards
 - [ ] Real-time subscriptions with automatic cleanup on unmount
 - [ ] Fallback to polling if WebSocket fails
@@ -627,7 +627,7 @@ RLS Policies
 
 - [ ] Supabase migration applied to production
 - [ ] Storage buckets created with correct policies
-- [ ] Environment variables set in Vercel
+- [ ] Environment variables set in Netlify
 - [ ] Custom domain configured (if applicable)
 - [ ] SSL/HTTPS enabled
 - [ ] Error monitoring configured (Sentry or similar)
