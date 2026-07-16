@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -468,10 +469,13 @@ export default function StaffDashboard() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">Table {qrModal.tableNumber}</h3>
                 <p className="text-sm text-gray-500 mb-4">Scan to order</p>
                 <div className="flex justify-center mb-4">
-                  <img
+                  <Image
                     src={qrModal.dataUrl}
                     alt={`QR Code for Table ${qrModal.tableNumber}`}
+                    width={192}
+                    height={192}
                     className="w-48 h-48 rounded-xl"
+                    unoptimized
                   />
                 </div>
                 <Button
