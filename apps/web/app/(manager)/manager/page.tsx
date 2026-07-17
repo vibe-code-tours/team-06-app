@@ -7,6 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   BarChart3,
   Clock,
   CreditCard,
@@ -15,6 +21,7 @@ import {
   TrendingUp,
   Receipt,
 } from 'lucide-react';
+import type { OrderDetail } from '@/lib/services/orderDetailService';
 
 interface Order {
   id: string;
@@ -48,7 +55,27 @@ export default function ManagerDashboard() {
     averageOrderValue: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const supabase = createClient();
+
+  const openOrderDetail = async (orderId: string) => {
+    setDetailLoading(true);
+    setDetailError(null);
+    const response = await fetch(`/api/orders/${orderId}`);
+
+    if (!response.ok) {
+      const { error } = await response.json();
+      setDetailError(error?.message ?? 'Failed to load order details');
+      setDetailLoading(false);
+      return;
+    }
+
+    const { data } = (await response.json()) as { data: OrderDetail };
+    setSelectedOrder(data);
+    setDetailLoading(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -261,7 +288,16 @@ export default function ManagerDashboard() {
                   return (
                     <div
                       key={order.id}
-                      className="flex items-center justify-between gap-2 flex-wrap p-4 border rounded-lg"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openOrderDetail(order.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openOrderDetail(order.id);
+                        }
+                      }}
+                      className="flex items-center justify-between gap-2 flex-wrap p-4 border rounded-lg cursor-pointer hover:bg-brand-blue/5 hover:border-brand-blue/20 transition-colors"
                     >
                       <div className="flex items-center gap-3 flex-wrap">
                         <div className="flex items-center justify-center h-9 w-9 rounded-full bg-brand-blue/10 text-brand-blue shrink-0">
@@ -305,6 +341,100 @@ export default function ManagerDashboard() {
             )}
           </CardContent>
         </Card>
+
+        <Dialog
+          open={selectedOrder !== null || detailLoading || detailError !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedOrder(null);
+              setDetailError(null);
+            }
+          }}
+        >
+          <DialogContent>
+            {detailLoading && (
+              <div className="py-8 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-blue" />
+              </div>
+            )}
+
+            {detailError && !detailLoading && (
+              <div
+                className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md"
+                role="alert"
+              >
+                {detailError}
+              </div>
+            )}
+
+            {selectedOrder && !detailLoading && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-brand-blue">
+                    Table {selectedOrder.table.table_number}
+                    {selectedOrder.table.name && ` — ${selectedOrder.table.name}`}
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 flex-wrap text-sm text-gray-500">
+                    <span>
+                      {new Date(selectedOrder.created_at).toLocaleString()}
+                    </span>
+                    <Badge
+                      variant={
+                        selectedOrder.status === 'COMPLETED' ? 'default' : 'secondary'
+                      }
+                    >
+                      {selectedOrder.status}
+                    </Badge>
+                    <Badge
+                      variant={
+                        selectedOrder.payment_status === 'PAID' ? 'default' : 'destructive'
+                      }
+                    >
+                      {selectedOrder.payment_status}
+                    </Badge>
+                  </div>
+
+                  <div className="space-y-2 pb-3 border-b">
+                    {selectedOrder.order_items.map((item) => (
+                      <div key={item.id} className="text-sm">
+                        <div className="flex justify-between">
+                          <span>
+                            {item.quantity}x {item.menu_item.name}
+                          </span>
+                          <span>${(item.unit_price * item.quantity).toFixed(2)}</span>
+                        </div>
+                        {item.special_instructions && (
+                          <div className="text-xs text-gray-500 italic mt-0.5">
+                            {item.special_instructions}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {selectedOrder.special_instructions && (
+                    <div className="text-sm text-gray-600 bg-gray-50 border rounded-md p-3">
+                      {selectedOrder.special_instructions}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between font-bold text-brand-blue pt-1">
+                    <span>Total</span>
+                    <span>
+                      $
+                      {selectedOrder.order_items
+                        .reduce((sum, item) => sum + item.unit_price * item.quantity, 0)
+                        .toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
