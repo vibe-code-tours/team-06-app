@@ -27,7 +27,7 @@ describe('process_payment() and release_table()', () => {
 
     const { data: paymentId, error } = await serviceClient.rpc('process_payment', {
       p_order_id: orderId,
-      p_amount: 12.5,
+      p_amount: 13.75,
       p_tax_amount: 1.25,
       p_discount_amount: 0,
       p_payment_method: 'CARD',
@@ -66,14 +66,18 @@ describe('process_payment() and release_table()', () => {
     // First payment succeeds
     await serviceClient.rpc('process_payment', {
       p_order_id: orderId,
-      p_amount: 12.5,
+      p_amount: 13.75,
+      p_tax_amount: 1.25,
+      p_discount_amount: 0,
       p_payment_method: 'CASH',
     });
 
     // Second payment should fail
     const { error } = await serviceClient.rpc('process_payment', {
       p_order_id: orderId,
-      p_amount: 12.5,
+      p_amount: 13.75,
+      p_tax_amount: 1.25,
+      p_discount_amount: 0,
       p_payment_method: 'CASH',
     });
 
