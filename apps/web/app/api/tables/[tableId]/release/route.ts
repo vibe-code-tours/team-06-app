@@ -20,12 +20,30 @@ export async function POST(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, restaurant_id')
     .eq('id', user.id)
     .single();
 
   if (!profile || !ALLOWED_ROLES.includes(profile.role)) {
     return err('FORBIDDEN', 'Forbidden', 403);
+  }
+
+  // Restaurant-membership check: ensure the table belongs to the user's restaurant.
+  // super_admin (restaurant_id = null) bypasses this check.
+  if (profile.restaurant_id !== null) {
+    const { data: table } = await supabase
+      .from('tables')
+      .select('restaurant_id')
+      .eq('id', params.tableId)
+      .single();
+
+    if (!table) {
+      return err('NOT_FOUND', 'Not found', 404);
+    }
+
+    if (table.restaurant_id !== profile.restaurant_id) {
+      return err('FORBIDDEN', 'Forbidden', 403);
+    }
   }
 
   const result = await releaseTable(supabase, params.tableId);
