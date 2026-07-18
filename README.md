@@ -1,4 +1,4 @@
-# Restaurant QR Order System
+# QR Dine
 
 A complete QR-based ordering platform where customers scan a table QR code, browse the menu, place orders, and pay — all from their phone. Staff manage orders through dedicated dashboards with real-time updates.
 

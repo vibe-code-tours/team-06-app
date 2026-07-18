@@ -5,7 +5,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Restaurant QR Order System',
+  title: 'QR Dine',
   description: 'QR-based ordering platform for restaurants',
 };
 
