@@ -15,9 +15,16 @@ describe('paymentService', () => {
       p_table_id: fixture.tableId,
       p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
     });
+    // PENDING → ACCEPTED → PREPARING → READY
+    await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'ACCEPTED' });
+    await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'PREPARING' });
+    await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'READY' });
+
     const { data: paymentId } = await serviceClient.rpc('process_payment', {
       p_order_id: orderId,
-      p_amount: 12.5,
+      p_amount: 13.75,
+      p_tax_amount: 1.25,
+      p_discount_amount: 0,
       p_payment_method: 'CASH',
     });
 

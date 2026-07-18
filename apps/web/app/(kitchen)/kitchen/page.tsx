@@ -83,6 +83,18 @@ export default function KitchenDashboard() {
   const supabase = createClient();
 
   const fetchOrders = async () => {
+    // Get current user's restaurant_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("restaurant_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.restaurant_id) return;
+
     const { data, error } = await supabase
       .from("orders")
       .select(
@@ -100,6 +112,7 @@ export default function KitchenDashboard() {
         )
       `,
       )
+      .eq("restaurant_id", profile.restaurant_id)
       .in("status", ["PENDING", "ACCEPTED", "PREPARING"])
       .order("created_at", { ascending: true });
 
