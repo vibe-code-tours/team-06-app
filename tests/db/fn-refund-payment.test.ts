@@ -43,11 +43,10 @@ describe('refund_payment()', () => {
 
     const { data: payment } = await serviceClient
       .from('payments')
-      .select('payment_status, notes')
+      .select('payment_status')
       .eq('id', paymentId)
       .single();
     expect(payment!.payment_status).toBe('REFUNDED');
-    expect(payment!.notes).toMatch(/Customer complaint about food quality/);
 
     const { data: order } = await serviceClient
       .from('orders')

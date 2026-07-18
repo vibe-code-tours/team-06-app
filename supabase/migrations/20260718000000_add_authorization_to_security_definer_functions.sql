@@ -461,7 +461,7 @@ BEGIN
 
     UPDATE public.payments
     SET payment_status = 'REFUNDED',
-        notes = COALESCE(notes || E'\n', '') || 'REFUNDED by ' || COALESCE(v_current_user_id::TEXT, 'system') || ': ' || p_reason,
+        notes = COALESCE(notes || E'\n', '') || 'REFUNDED by ' || v_current_user_id::TEXT || ': ' || p_reason,
         updated_at = now()
     WHERE id = p_payment_id;
 
