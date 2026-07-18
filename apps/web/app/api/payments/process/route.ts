@@ -1,14 +1,11 @@
 import { ok, err } from '@restaurant-qr/shared/http/apiResponse'
 import { createClient } from '@/lib/supabase/server'
-import { refundPaymentSchema } from '@restaurant-qr/shared'
-import { refundPayment } from '@/lib/services/paymentService'
+import { processPaymentSchema } from '@restaurant-qr/shared'
+import { processPayment } from '@/lib/services/paymentService'
 
 const ALLOWED_ROLES = ['cashier', 'manager', 'restaurant_owner', 'super_admin']
 
-export async function POST(
-    request: Request,
-    { params }: { params: { paymentId: string } }
-) {
+export async function POST(request: Request) {
     const supabase = createClient()
 
     const {
@@ -30,13 +27,17 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => null)
-    const parsed = refundPaymentSchema.safeParse(body)
+    const parsed = processPaymentSchema.safeParse(body)
 
     if (!parsed.success) {
-        return err('VALIDATION_ERROR', parsed.error.errors.map((e) => e.message).join(', '), 400)
+        return err(
+            'VALIDATION_ERROR',
+            parsed.error.errors.map((e) => e.message).join(', '),
+            400
+        )
     }
 
-    const result = await refundPayment(supabase, params.paymentId, parsed.data.reason)
+    const result = await processPayment(supabase, parsed.data)
 
     if ('error' in result) {
         const status = result.error.includes('Forbidden') ? 403 : 422
