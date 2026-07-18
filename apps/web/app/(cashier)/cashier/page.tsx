@@ -99,6 +99,18 @@ function CashierDashboardContent() {
   const searchParams = useSearchParams();
 
   const fetchOrders = useCallback(async () => {
+    // Get current user's restaurant_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("restaurant_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.restaurant_id) return;
+
     const { data } = await supabase
       .from("orders")
       .select(
@@ -117,6 +129,7 @@ function CashierDashboardContent() {
         )
       `,
       )
+      .eq("restaurant_id", profile.restaurant_id)
       .in("status", ["READY", "COMPLETED"])
       .eq("payment_status", "UNPAID")
       .order("created_at", { ascending: true });
@@ -161,11 +174,24 @@ function CashierDashboardContent() {
   }, []);
 
   const fetchRecentPayments = useCallback(async () => {
+    // Get current user's restaurant_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("restaurant_id")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile?.restaurant_id) return;
+
     const { data } = await supabase
       .from("payments")
       .select(
         "id, total_amount, payment_status, notes, order:orders(table:tables(table_number))",
       )
+      .eq("restaurant_id", profile.restaurant_id)
       .in("payment_status", ["COMPLETED", "REFUNDED"])
       .order("created_at", { ascending: false })
       .limit(10);
@@ -237,16 +263,21 @@ function CashierDashboardContent() {
 
     const summary = calculateSummary(order);
 
-    const { error } = await supabase.rpc("process_payment", {
-      p_order_id: orderId,
-      p_amount: summary.subtotal,
-      p_tax_amount: summary.tax,
-      p_discount_amount: summary.discount,
-      p_payment_method: method,
+    const response = await fetch("/api/payments/process", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order_id: orderId,
+        amount: summary.subtotal,
+        tax_amount: summary.tax,
+        discount_amount: summary.discount,
+        payment_method: method,
+      }),
     });
 
-    if (error) {
-      setErrorMessage(error.message);
+    if (!response.ok) {
+      const { error } = await response.json();
+      setErrorMessage(error?.message ?? "Failed to process payment");
       setProcessing(false);
       return;
     }

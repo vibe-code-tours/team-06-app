@@ -86,10 +86,23 @@ export default function StaffDashboard() {
   const supabase = createClient();
 
   const fetchData = async () => {
+    // Get current user's restaurant_id
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('restaurant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.restaurant_id) return;
+
     const [tablesResult, ordersResult] = await Promise.all([
       supabase
         .from('tables')
         .select('*')
+        .eq('restaurant_id', profile.restaurant_id)
         .order('table_number', { ascending: true }),
       supabase
         .from('orders')
@@ -100,6 +113,7 @@ export default function StaffDashboard() {
           created_at,
           table:tables(table_number)
         `)
+        .eq('restaurant_id', profile.restaurant_id)
         .order('created_at', { ascending: false }),
     ]);
 
