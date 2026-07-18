@@ -27,6 +27,30 @@ async function buildAuthCookie(
   return `${getSupabaseCookieName()}=base64-${base64}`;
 }
 
+/** Helper: create order + transition to READY + process payment → returns paymentId */
+async function createReadyPayment(
+  serviceClient: ReturnType<typeof createServiceClient>,
+  fixture: Awaited<ReturnType<typeof seedTestData>>
+) {
+  const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
+    p_restaurant_id: fixture.restaurantId,
+    p_table_id: fixture.tableId,
+    p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
+  });
+  await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'ACCEPTED' });
+  await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'PREPARING' });
+  await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'READY' });
+
+  const { data: paymentId } = await serviceClient.rpc('process_payment', {
+    p_order_id: orderId,
+    p_amount: 12.5,
+    p_tax_amount: 1.25,
+    p_discount_amount: 0,
+    p_payment_method: 'CASH',
+  });
+  return paymentId as string;
+}
+
 describe('POST /api/payments/[paymentId]/refund', () => {
   const serviceClient = createServiceClient();
 
@@ -34,16 +58,7 @@ describe('POST /api/payments/[paymentId]/refund', () => {
 
   it('rejects an unauthenticated request with 307', async () => {
     const fixture = await seedTestData(serviceClient);
-    const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
-      p_restaurant_id: fixture.restaurantId,
-      p_table_id: fixture.tableId,
-      p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
-    });
-    const { data: paymentId } = await serviceClient.rpc('process_payment', {
-      p_order_id: orderId,
-      p_amount: 12.5,
-      p_payment_method: 'CASH',
-    });
+    const paymentId = await createReadyPayment(serviceClient, fixture);
 
     const response = await fetch(`${BASE_URL}/api/payments/${paymentId}/refund`, {
       method: 'POST',
@@ -57,16 +72,7 @@ describe('POST /api/payments/[paymentId]/refund', () => {
 
   it('rejects a kitchen_staff with 403', async () => {
     const fixture = await seedTestData(serviceClient);
-    const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
-      p_restaurant_id: fixture.restaurantId,
-      p_table_id: fixture.tableId,
-      p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
-    });
-    const { data: paymentId } = await serviceClient.rpc('process_payment', {
-      p_order_id: orderId,
-      p_amount: 12.5,
-      p_payment_method: 'CASH',
-    });
+    const paymentId = await createReadyPayment(serviceClient, fixture);
 
     const kitchenClient = await createRoleClient(
       fixture.profiles.kitchen_staff.email,
@@ -89,16 +95,7 @@ describe('POST /api/payments/[paymentId]/refund', () => {
 
   it('allows a cashier to refund a completed payment', async () => {
     const fixture = await seedTestData(serviceClient);
-    const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
-      p_restaurant_id: fixture.restaurantId,
-      p_table_id: fixture.tableId,
-      p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
-    });
-    const { data: paymentId } = await serviceClient.rpc('process_payment', {
-      p_order_id: orderId,
-      p_amount: 12.5,
-      p_payment_method: 'CASH',
-    });
+    const paymentId = await createReadyPayment(serviceClient, fixture);
 
     const cashierClient = await createRoleClient(
       fixture.profiles.cashier.email,
@@ -121,16 +118,7 @@ describe('POST /api/payments/[paymentId]/refund', () => {
 
   it('returns 400 when reason is missing', async () => {
     const fixture = await seedTestData(serviceClient);
-    const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
-      p_restaurant_id: fixture.restaurantId,
-      p_table_id: fixture.tableId,
-      p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
-    });
-    const { data: paymentId } = await serviceClient.rpc('process_payment', {
-      p_order_id: orderId,
-      p_amount: 12.5,
-      p_payment_method: 'CASH',
-    });
+    const paymentId = await createReadyPayment(serviceClient, fixture);
 
     const managerClient = await createRoleClient(
       fixture.profiles.manager.email,
@@ -153,16 +141,7 @@ describe('POST /api/payments/[paymentId]/refund', () => {
 
   it('allows a manager to refund a completed payment', async () => {
     const fixture = await seedTestData(serviceClient);
-    const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
-      p_restaurant_id: fixture.restaurantId,
-      p_table_id: fixture.tableId,
-      p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
-    });
-    const { data: paymentId } = await serviceClient.rpc('process_payment', {
-      p_order_id: orderId,
-      p_amount: 12.5,
-      p_payment_method: 'CASH',
-    });
+    const paymentId = await createReadyPayment(serviceClient, fixture);
 
     const managerClient = await createRoleClient(
       fixture.profiles.manager.email,

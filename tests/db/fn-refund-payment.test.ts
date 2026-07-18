@@ -7,18 +7,31 @@ describe('refund_payment()', () => {
 
   beforeEach(() => resetDatabase(serviceClient));
 
-  it('marks a COMPLETED payment as REFUNDED and stores the reason', async () => {
-    const fixture = await seedTestData(serviceClient);
+  /** Helper: create order + transition to READY + process payment → returns paymentId */
+  async function createReadyOrderAndGetPaymentId(fixture: Awaited<ReturnType<typeof seedTestData>>) {
     const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
       p_restaurant_id: fixture.restaurantId,
       p_table_id: fixture.tableId,
       p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
     });
+    // PENDING → ACCEPTED → PREPARING → READY
+    await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'ACCEPTED' });
+    await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'PREPARING' });
+    await serviceClient.rpc('update_order_status', { p_order_id: orderId, p_new_status: 'READY' });
+
     const { data: paymentId } = await serviceClient.rpc('process_payment', {
       p_order_id: orderId,
       p_amount: 12.5,
+      p_tax_amount: 1.25,
+      p_discount_amount: 0,
       p_payment_method: 'CASH',
     });
+    return paymentId as string;
+  }
+
+  it('marks a COMPLETED payment as REFUNDED and stores the reason', async () => {
+    const fixture = await seedTestData(serviceClient);
+    const paymentId = await createReadyOrderAndGetPaymentId(fixture);
 
     const { data: refundedId, error } = await serviceClient.rpc('refund_payment', {
       p_payment_id: paymentId,
@@ -39,7 +52,7 @@ describe('refund_payment()', () => {
     const { data: order } = await serviceClient
       .from('orders')
       .select('payment_status')
-      .eq('id', orderId)
+      .eq('id', paymentId)
       .single();
     expect(order!.payment_status).toBe('REFUNDED');
   });
@@ -75,16 +88,7 @@ describe('refund_payment()', () => {
 
   it('rejects refunding an already-refunded payment', async () => {
     const fixture = await seedTestData(serviceClient);
-    const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
-      p_restaurant_id: fixture.restaurantId,
-      p_table_id: fixture.tableId,
-      p_items: [{ menu_item_id: fixture.menuItemId, quantity: 1 }],
-    });
-    const { data: paymentId } = await serviceClient.rpc('process_payment', {
-      p_order_id: orderId,
-      p_amount: 12.5,
-      p_payment_method: 'CASH',
-    });
+    const paymentId = await createReadyOrderAndGetPaymentId(fixture);
     await serviceClient.rpc('refund_payment', { p_payment_id: paymentId, p_reason: 'first refund' });
 
     const { error } = await serviceClient.rpc('refund_payment', {
@@ -93,6 +97,6 @@ describe('refund_payment()', () => {
     });
 
     expect(error).not.toBeNull();
-    expect(error!.message).toMatch(/Cannot refund a payment that is not completed/);
+    expect(error!.message).toMatch(/Payment has already been refunded/);
   });
 });
