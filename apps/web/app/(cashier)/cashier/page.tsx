@@ -482,7 +482,7 @@ function CashierDashboardContent() {
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
-                      <span>Tax ({(taxRate ?? 0).toFixed(1)}%)</span>
+                      <span>Tax ({((taxRate ?? 0) * 100).toFixed(1)}%)</span>
                       <span>
                         ${calculateSummary(selectedOrder).tax.toFixed(2)}
                       </span>
