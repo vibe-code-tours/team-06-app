@@ -241,7 +241,7 @@ function CashierDashboardContent() {
       (sum, item) => sum + item.unit_price * item.quantity,
       0,
     );
-    const tax = subtotal * ((taxRate ?? 0) / 100);
+    const tax = subtotal * (taxRate ?? 0);
     const discount = Math.min(discountAmount, subtotal + tax);
     const total = subtotal + tax - discount;
 
@@ -268,7 +268,7 @@ function CashierDashboardContent() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         order_id: orderId,
-        amount: summary.subtotal,
+        amount: summary.total,
         tax_amount: summary.tax,
         discount_amount: summary.discount,
         payment_method: method,
