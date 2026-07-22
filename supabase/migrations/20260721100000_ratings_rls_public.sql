@@ -22,6 +22,7 @@ CREATE POLICY order_ratings_insert_own_completed ON order_ratings
     );
 
 -- Customers can read ratings (public — anon customers need this to check if they already rated)
+DROP POLICY IF EXISTS order_ratings_select_public ON order_ratings;
 CREATE POLICY order_ratings_select_public ON order_ratings
     FOR SELECT
     TO public
