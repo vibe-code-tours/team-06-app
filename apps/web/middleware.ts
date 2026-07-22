@@ -32,7 +32,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/login', '/auth', '/api/menu', '/qa-manual'];
+  const publicRoutes = ['/login', '/auth', '/api/menu', '/qa-manual', '/order', '/api/public', '/api/orders'];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
@@ -86,7 +86,7 @@ export async function middleware(request: NextRequest) {
         kitchen_staff: ['/kitchen', '/api/orders', '/auth'],
         waiter: ['/staff', '/api/tables', '/auth'],
         cashier: ['/cashier', '/api/payments', '/auth'],
-        customer: ['/', '/auth'],
+        customer: ['/', '/auth', '/order', '/api/orders'],
       };
 
       const allowed = allowedRoutes[profile.role] || [];

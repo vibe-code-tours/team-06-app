@@ -32,7 +32,7 @@ describe('GET /api/orders/[orderId]', () => {
 
   beforeEach(() => resetDatabase(serviceClient));
 
-  it('rejects an unauthenticated request with 307', async () => {
+  it('rejects an unauthenticated request with 401', async () => {
     const fixture = await seedTestData(serviceClient);
     const { data: orderId } = await serviceClient.rpc('create_order_with_session', {
       p_restaurant_id: fixture.restaurantId,
@@ -44,7 +44,7 @@ describe('GET /api/orders/[orderId]', () => {
       redirect: 'manual',
     });
 
-    expect(response.status).toBe(307);
+    expect(response.status).toBe(401);
   });
 
   it('allows a manager to view order detail with item names and instructions', async () => {

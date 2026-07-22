@@ -114,7 +114,7 @@ describe('POST /api/orders/[orderId]/status', () => {
             redirect: 'manual',
         })
 
-        // Middleware redirects to /login (307) for unauthenticated requests
-        expect(response.status).toBe(307)
+        // API returns 401 directly (middleware allows /api/orders as public route)
+        expect(response.status).toBe(401)
     })
 })

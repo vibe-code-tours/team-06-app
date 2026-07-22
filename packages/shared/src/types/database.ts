@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -62,6 +67,54 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          invited_by: string | null
+          restaurant_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          invited_by?: string | null
+          restaurant_id?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string | null
+          restaurant_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invites_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
@@ -167,6 +220,54 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_ratings: {
+        Row: {
+          created_at: string
+          feedback_text: string | null
+          food_quality_rating: number | null
+          id: string
+          order_id: string
+          overall_rating: number
+          restaurant_id: string
+          service_rating: number | null
+        }
+        Insert: {
+          created_at?: string
+          feedback_text?: string | null
+          food_quality_rating?: number | null
+          id?: string
+          order_id: string
+          overall_rating: number
+          restaurant_id: string
+          service_rating?: number | null
+        }
+        Update: {
+          created_at?: string
+          feedback_text?: string | null
+          food_quality_rating?: number | null
+          id?: string
+          order_id?: string
+          overall_rating?: number
+          restaurant_id?: string
+          service_rating?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_ratings_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_ratings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -727,4 +828,3 @@ export const Constants = {
     },
   },
 } as const
-

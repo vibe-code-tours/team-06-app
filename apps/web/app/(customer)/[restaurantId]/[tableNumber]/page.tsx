@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,8 @@ interface CartItem {
 
 export default function CustomerMenuPage() {
   const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const restaurantId = params.restaurantId as string;
   const tableNumber = params.tableNumber as string;
 
@@ -92,6 +94,47 @@ export default function CustomerMenuPage() {
           }));
           setCategories(filteredCategories as unknown as Category[]);
         }
+
+        // Look up the table to get tableId — needed to render OrderTracker
+        // on subsequent visits
+        const { data: tableData } = await supabase
+          .from('tables')
+          .select('id')
+          .eq('restaurant_id', restaurantId)
+          .eq('table_number', parseInt(tableNumber))
+          .single();
+
+        if (tableData) {
+          setTableId(tableData.id);
+
+          // Only restore tracking view when there's an ACTIVE session (order in progress).
+          // Ignore CLOSED/PAID/rated sessions — the customer journey for that order
+          // is complete and they should see the menu instead.
+          const { data: activeSession } = await supabase
+            .from('order_sessions')
+            .select('id')
+            .eq('table_id', tableData.id)
+            .eq('status', 'ACTIVE')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (activeSession) {
+            const { data: existingOrders } = await supabase
+              .from('orders')
+              .select('id, status')
+              .eq('table_session_id', activeSession.id);
+
+            if (existingOrders && existingOrders.length > 0) {
+              // Only restore if there's at least one non-cancelled order.
+              // A session with only cancelled orders is considered finished.
+              const hasActiveOrders = existingOrders.some(o => o.status !== 'CANCELLED');
+              if (hasActiveOrders) {
+                setOrderPlaced(true);
+              }
+            }
+          }
+        }
       }
 
       setLoading(false);
@@ -99,6 +142,14 @@ export default function CustomerMenuPage() {
 
     fetchMenu();
   }, [restaurantId, supabase]);
+
+  // Stale ?orderPlaced=true in URL but no active session → clean the URL
+  const staleOrderParam = !loading && !orderPlaced && searchParams.get('orderPlaced') === 'true';
+  useEffect(() => {
+    if (staleOrderParam) {
+      router.replace(`/${restaurantId}/${tableNumber}`);
+    }
+  }, [staleOrderParam, router, restaurantId, tableNumber]);
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -187,7 +238,7 @@ export default function CustomerMenuPage() {
         setErrorMessage(error.message);
       }
     } else {
-      setOrderPlaced(true);
+      router.push(`/order/confirmation/${data}`);
       setCart([]);
       setTableOccupied(false);
       setErrorMessage(null);
@@ -221,7 +272,12 @@ export default function CustomerMenuPage() {
       <OrderTracker
         restaurantId={restaurantId}
         tableId={tableId}
-        onStartNewOrder={() => setOrderPlaced(false)}
+        tableNumber={tableNumber}
+        onStartNewOrder={() => {
+          // Force a full page navigation to clear all React state and
+          // let the init check determine whether to show menu or tracker
+          window.location.href = `/${restaurantId}/${tableNumber}`;
+        }}
       />
     );
   }

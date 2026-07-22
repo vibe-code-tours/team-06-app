@@ -152,6 +152,21 @@ export interface Payment {
 }
 
 // ============================================================================
+// RATING TYPES
+// ============================================================================
+
+export interface OrderRating {
+  id: string;
+  order_id: string;
+  restaurant_id: string;
+  overall_rating: number;
+  food_quality_rating: number | null;
+  service_rating: number | null;
+  feedback_text: string | null;
+  created_at: string;
+}
+
+// ============================================================================
 // API TYPES
 // ============================================================================
 
