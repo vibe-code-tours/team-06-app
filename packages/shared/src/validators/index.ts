@@ -137,6 +137,18 @@ export const inviteStaffSchema = z.object({
 });
 
 // ============================================================================
+// RATING VALIDATORS
+// ============================================================================
+
+export const rateOrderSchema = z.object({
+  order_id: z.string().uuid('Invalid order ID'),
+  overall_rating: z.number().int().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5'),
+  food_quality_rating: z.number().int().min(1).max(5).optional(),
+  service_rating: z.number().int().min(1).max(5).optional(),
+  feedback_text: z.string().max(500, 'Feedback must be 500 characters or less').optional(),
+});
+
+// ============================================================================
 // TYPES
 // ============================================================================
 
@@ -150,3 +162,4 @@ export type TableInput = z.infer<typeof tableSchema>;
 export type RestaurantInput = z.infer<typeof restaurantSchema>;
 export type UserInput = z.infer<typeof userSchema>;
 export type InviteStaffInput = z.infer<typeof inviteStaffSchema>;
+export type RateOrderInput = z.infer<typeof rateOrderSchema>;
