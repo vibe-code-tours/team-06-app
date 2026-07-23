@@ -132,11 +132,11 @@ app/
 
 | Service         | Platform          |
 | --------------- | ----------------- |
-| Frontend        | Netlify            |
+| Frontend        | Vercel            |
 | Backend         | Supabase Cloud    |
 | Database        | Supabase PostgreSQL |
 | Storage         | Supabase Storage  |
-| CDN             | Netlify Edge Network |
+| CDN             | Vercel Edge Network |
 
 ---
 

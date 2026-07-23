@@ -627,7 +627,7 @@ RLS Policies
 
 - [ ] Supabase migration applied to production
 - [ ] Storage buckets created with correct policies
-- [ ] Environment variables set in Netlify
+- [ ] Environment variables set in Vercel
 - [ ] Custom domain configured (if applicable)
 - [ ] SSL/HTTPS enabled
 - [ ] Error monitoring configured (Sentry or similar)

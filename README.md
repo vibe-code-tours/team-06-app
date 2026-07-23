@@ -1,257 +1,426 @@
-# QR Dine
+<div align="center">
+  <img src="apps/web/public/logo.png" alt="QR Dine" width="400">
+</div>
 
-A complete QR-based ordering platform where customers scan a table QR code, browse the menu, place orders, and pay — all from their phone. Staff manage orders through dedicated dashboards with real-time updates.
+<h1 align="center">QR Dine — Restaurant QR Order System</h1>
 
-🔗 **Live Demo:** https://team-06-app.netlify.app
+<p align="center">
+  A complete QR-based ordering platform where customers scan a table QR code, browse the menu,
+  place orders, and pay — all from their phone. Staff manage everything through role-based
+  dashboards with real-time updates.
+</p>
 
-## Tech Stack
+<p align="center">
+  <a href="https://qrdine-demo.vercel.app">
+    <img src="https://img.shields.io/badge/Live_Demo-🔗-8B5CF6?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo">
+  </a>
+  <a href="#-getting-started">
+    <img src="https://img.shields.io/badge/Next.js_14-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 14">
+  </a>
+  <a href="#-tech-stack">
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  </a>
+  <a href="#-tech-stack">
+    <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  </a>
+  <a href="#-license">
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT License">
+  </a>
+</p>
 
-- **Frontend**: Next.js 14 (App Router)
-- **Backend**: Supabase (PostgreSQL, Auth, Realtime, Storage)
-- **UI**: Tailwind CSS + shadcn/ui
-- **Validation**: Zod
-- **Monorepo**: Turborepo
+<br>
 
-## Project Structure
+---
+
+## 📋 Table of Contents
+
+- [✨ Features](#-features)
+- [🖥️ Screenshots](#️-screenshots)
+- [🧑‍💼 User Roles](#-user-roles)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [📦 Project Structure](#-project-structure)
+- [🚀 Getting Started](#-getting-started)
+- [🧪 Testing](#-testing)
+- [📖 Documentation](#-documentation)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+---
+
+## ✨ Features
+
+### 📱 Customer Experience
+
+| Feature | Description |
+|---------|-------------|
+| **Scan & Order** | Customers scan a table QR code and instantly access the digital menu |
+| **Digital Menu** | Browse categories, view item details, prices, and images |
+| **Custom Orders** | Add special instructions per item (e.g., "no onions", "extra spicy") |
+| **Real-Time Tracking** | Follow order status live — from PENDING → ACCEPTED → PREPARING → READY → COMPLETED |
+
+### 👨‍🍳 Kitchen Dashboard
+
+| Feature | Description |
+|---------|-------------|
+| **Live Order Queue** | New orders appear instantly via Supabase Realtime subscriptions |
+| **Status Controls** | Accept, start preparing, and mark orders ready — one click each |
+| **Order Grouping** | Orders grouped by table for efficient preparation |
+| **Priority Indicators** | New orders highlighted, older orders de-emphasized |
+| **Item Details** | See item names, quantities, and special instructions at a glance |
+
+### 🧑‍💼 Staff Dashboard (Waiters)
+
+| Feature | Description |
+|---------|-------------|
+| **Table Overview** | Grid view of all tables with current status (Available / Occupied / Cleaning) |
+| **Active Orders Tab** | Orders currently being prepared |
+| **Waiting Payment Tab** | Orders ready for payment processing |
+| **Completed Orders Tab** | Today's fulfilled orders for reference |
+| **Real-Time Updates** | All views update live via WebSocket |
+
+### 💳 Payment Module
+
+| Feature | Description |
+|---------|-------------|
+| **Multiple Methods** | Cash, Card, and Digital Wallet supported |
+| **Bill Calculation** | Subtotal, tax, discounts, and grand total — fully configurable |
+| **Payment Records** | Transaction ID, method, amount, timestamp, and cashier ID |
+| **Refund Processing** | Reverse payments with reason and refund status |
+| **Receipt Generation** | Itemized summary with subtotal, tax, discounts, and payment method |
+
+### 🛠️ Owner Management & Admin
+
+| Feature | Description |
+|---------|-------------|
+| **Menu Management** | Full CRUD for categories and items with image upload and availability toggle |
+| **Table Management** | Add, edit, remove tables with auto-generated QR codes |
+| **Staff Management** | Invite staff, assign roles (7 roles), deactivate accounts |
+| **QR Code Management** | Generate, download, and regenerate QR codes per table or batch |
+| **Business Settings** | Operating name, email, tax rates, restaurant branding, and more |
+| **Multi-Restaurant** | Super Admin can manage all restaurants from a single dashboard |
+
+### 🔒 Security & Permissions
+
+- **Row Level Security (RLS)** on all 9+ tables — no exceptions
+- **45+ RLS policies** enforcing fine-grained role-based access
+- **Atomic database functions** for order creation, payment processing, and session locking
+- **Three-layer authorization**: database (RLS) → API (route handlers) → UI (middleware + conditional rendering)
+- **Restaurant-scoped data isolation** — Owner A can never see Owner B's data
+
+---
+
+## 🖥️ Screenshots
+
+### Customer Order Flow
+
+<p align="center">
+  <img src="screenshots/CustomerOrder1.png" alt="Menu Overview" width="180">
+  <img src="screenshots/CustomerOrder2.png" alt="Menu Categories" width="180">
+  <img src="screenshots/CustomerOrder3.png" alt="Item Details" width="180">
+  <img src="screenshots/CustomerOrder4.png" alt="Cart Review" width="180">
+  <img src="screenshots/CustomerOrder5.png" alt="Order Placed" width="180">
+</p>
+<p align="center">
+  <em>From left to right: Menu overview → Category browsing → Item details → Cart review → Order confirmation</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/CustomerOrder6.png" alt="Order Status" width="180">
+  <img src="screenshots/CustomerOrder7.png" alt="Order Tracking" width="180">
+  <img src="screenshots/CustomerOrder8.png" alt="Order Ready" width="180">
+  <img src="screenshots/CustomerOrder9.png" alt="Bill Request" width="180">
+</p>
+<p align="center">
+  <em>Order tracking in real-time: Status updates → Preparing → Ready for pickup → Bill request</em>
+</p>
+
+### Staff Dashboards
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/Login.png" alt="Login" width="100%"><br>
+      <em>🔐 Authentication — Role-based login redirects users to their dashboard</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/Kitchen.png" alt="Kitchen Dashboard" width="100%"><br>
+      <em>👨‍🍳 Kitchen Dashboard — Real-time order queue with status controls</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/Staff.png" alt="Staff Dashboard" width="100%"><br>
+      <em>🧑‍💼 Staff Dashboard — Table status overview and order management</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/Cashier.png" alt="Cashier Panel" width="100%"><br>
+      <em>💳 Cashier Panel — Payment processing with multiple methods</em>
+    </td>
+  </tr>
+</table>
+
+### Manager, Owner Management & Admin
+
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/Manager.png" alt="Manager Dashboard" width="100%"><br>
+      <em>📊 Manager Dashboard — Oversee orders, staff, and daily operations</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/Owner3.png" alt="Owner Dashboard" width="100%"><br>
+      <em>🏪 Owner's Staff Management — Full control over restaurant settings and staff roles</em>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="screenshots/Owner1.png" alt="Menu Management" width="100%"><br>
+      <em>📋 Owner's Menu Management — CRUD operations for categories and items</em>
+    </td>
+    <td width="50%" align="center">
+      <img src="screenshots/Owner2.png" alt="Table & Staff Management" width="100%"><br>
+      <em>🪑 Owner's Table Management — Manage tables and QR codes</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="screenshots/SuperAdmin.png" alt="Super Admin Dashboard" width="70%"><br>
+      <em>🌐 Super Admin Dashboard — Multi-restaurant management and system-wide control</em>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🧑‍💼 User Roles
+
+The system defines **7 user roles** with a hierarchical permission model:
 
 ```
-TEAM-06-APP/
+Super Admin
+  └── Restaurant Owner
+        ├── Manager
+        │     ├── Kitchen Staff
+        │     ├── Waiter
+        │     └── Cashier
+        └── Customer (Guest, no assignment needed)
+```
+
+| Role | Scope | Key Permissions |
+|------|-------|-----------------|
+| **Super Admin** | System-wide | Full access across all restaurants, user management, system settings |
+| **Restaurant Owner** | Own restaurant | Menu, tables, staff, settings, reports — full control over own restaurant |
+| **Manager** | Own restaurant | Orders, staff scheduling, daily operations (no owner-level settings) |
+| **Kitchen Staff** | Kitchen only | View orders, update status (Accept → Preparing → Ready) |
+| **Waiter** | Floor only | Table status, order assistance, customer support |
+| **Cashier** | Payments only | Process payments, view bills, issue refunds |
+| **Customer** | Public | Browse menu, place orders, track status, request bill |
+
+> 📖 See [`feature-spec.md`](feature-spec.md#-role--permission-management) for the complete permission matrix with all 100+ resource-role combinations.
+
+---
+
+## 🛠️ Tech Stack
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js_14-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 14">
+  <img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/Turborepo-EF4444?style=for-the-badge&logo=turborepo&logoColor=white" alt="Turborepo">
+  <img src="https://img.shields.io/badge/Zod-3068B7?style=for-the-badge&logo=zod&logoColor=white" alt="Zod">
+</p>
+
+| Category | Technology | Purpose |
+|----------|-----------|---------|
+| **Framework** | Next.js 15 (App Router) | Full-stack React framework with server components |
+| **Language** | TypeScript (strict mode) | Type-safe development across the entire codebase |
+| **Database** | Supabase (PostgreSQL) | Relational database with 45+ RLS policies |
+| **Auth** | Supabase Auth | Email/password, JWT with role & restaurant metadata |
+| **Realtime** | Supabase Realtime | WebSocket subscriptions for live dashboard updates |
+| **Storage** | Supabase Storage | Menu item images and restaurant logos |
+| **UI** | Tailwind CSS + shadcn/ui | Utility-first CSS with accessible component primitives |
+| **Validation** | Zod | Runtime validation for all API inputs and forms |
+| **Forms** | react-hook-form | Performant form management |
+| **Monorepo** | Turborepo | Shared packages, coordinated builds |
+
+---
+
+## 📦 Project Structure
+
+```
+team-06-app/
 ├── apps/
-│   └── web/              # Next.js frontend
+│   └── web/                     # Next.js frontend (App Router)
+│       ├── app/
+│       │   ├── (auth)/          # Login and registration
+│       │   ├── (super-admin)/   # Multi-restaurant management
+│       │   ├── (restaurant-owner)/  # Owner dashboard & settings
+│       │   ├── (manager)/       # Manager operations
+│       │   ├── (kitchen)/       # Kitchen order queue
+│       │   ├── (staff)/         # Waiter table management
+│       │   ├── (cashier)/       # Payment processing
+│       │   ├── (customer)/      # Public menu & ordering
+│       │   └── api/             # Route handlers (REST)
+│       └── lib/
+│           ├── validators/      # Zod schemas
+│           └── services/        # Business logic layer
 ├── packages/
-│   └── shared/           # Shared types, utils, validators
+│   └── shared/                  # Shared types, utils, validators
 ├── supabase/
-│   ├── migrations/       # Database migrations
-│   └── functions/        # Edge functions
-├── docs/                 # Documentation
-└── monorepo-structure.md # Detailed directory structure
+│   ├── migrations/              # Database migrations (46+)
+│   └── functions/               # Supabase Edge Functions
+├── tests/                       # Integration & E2E tests
+├── docs/                        # Documentation & workflow plans
+└── screenshots/                 # Feature screenshots
 ```
 
-## Getting Started
+### Architecture Principles
+
+- **Handlers stay thin** — Route handlers validate input (Zod) and delegate to service functions
+- **Services own business logic** — Order state transitions, session locking, payment math in services
+- **Atomic DB operations** — `create_order_with_session()`, `update_order_status()`, `process_payment()` use `SELECT FOR UPDATE` transactions
+- **Three-layer security** — Every mutation is permission-checked at RLS (DB), API (route handler), and UI (conditional rendering)
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 22+ (required by `@supabase/supabase-js`'s native WebSocket support)
-- npm 10+
-- Supabase CLI
+| Requirement | Version |
+|-------------|---------|
+| Node.js | 22+ |
+| npm | 10+ |
+| Docker Desktop | Required for local Supabase |
+| Supabase CLI | Included as dev dependency |
 
 ### Installation
-
-Requires Docker Desktop running (Supabase's local stack runs as Docker containers).
 
 ```bash
 # Clone the repository
 git clone <repository-url>
 cd team-06-app
 
-# Install dependencies (includes the Supabase CLI as a devDependency)
+# Install dependencies
 npm install
 
-# Start Supabase locally — this also applies all migrations on first boot
+# Start Supabase locally (applies all migrations on first boot)
 npm run db:start
 
-# Print your local instance's URL + keys
+# Print your local API URL and keys
 npx supabase status
 ```
 
+### Environment Setup
+
 `npm run db:start` prints (or `npx supabase status` re-prints) the local `API URL`,
-`anon key`, and `service_role key`. Use them to fill in two separate env files —
-they're for different purposes and are both gitignored:
+`anon key`, and `service_role key`. Create your environment files:
 
 ```bash
-# apps/web/.env.local — used by `npm run dev` (the Next.js app)
+# Next.js app configuration
 cp .env.example apps/web/.env.local
-# edit apps/web/.env.local with the local API URL + anon key (+ service_role key)
+# Edit with local API URL + anon key + service_role key
 
-# supabase/.env.test — used by `npm run test` (Jest/RLS/integration tests)
+# Test configuration
 cp supabase/.env.test.example supabase/.env.test
-# edit supabase/.env.test with the local API URL + anon key + service_role key
+# Edit with local API URL + anon key + service_role key
 ```
 
+### Development
+
 ```bash
-# Seed the database (optional)
+# Seed the database with sample data (optional)
 npm run db:seed
 
-# Start development server
-npm run dev
-```
-
-Already have Supabase running and just need to reapply the schema (e.g. after
-pulling new migrations)? Use `npm run db:reset` — **not** `npm run db:migrate`,
-which pushes to a _linked remote_ project and doesn't apply to local dev.
-
-### Development Commands
-
-```bash
-# Start all apps in development mode
+# Start the development server
 npm run dev
 
-# Build all apps
-npm run build
-
-# Run linter
-npm run lint
-
-# Run tests
-npm run test
-
-# Generate TypeScript types from database
+# Generate TypeScript types from the database schema
 npm run types:generate
-
-# Push migrations to a LINKED REMOTE project (not local dev — see Getting Started)
-npm run db:migrate
-
-# Reset local database (drops + reapplies all migrations)
-npm run db:reset
-
-# Seed database
-npm run db:seed
 ```
 
-## Testing
+> 💡 Already have Supabase running and need to reapply the schema? Use `npm run db:reset`
+> — **not** `npm run db:migrate`, which pushes to a linked remote project.
 
-Assumes you've completed [Getting Started](#getting-started) — local Supabase running
-and `supabase/.env.test` filled in.
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start all apps in development mode |
+| `npm run build` | Build all apps for production |
+| `npm run lint` | Run ESLint across the codebase |
+| `npm run test` | Run unit and integration tests |
+| `npm run e2e` | Run Playwright end-to-end tests |
+| `npm run types:generate` | Regenerate TypeScript types from DB |
+| `npm run db:start` | Start local Supabase stack |
+| `npm run db:reset` | Reset local database (drop + reapply migrations) |
+| `npm run db:seed` | Seed database with sample data |
+
+---
+
+## 🧪 Testing
+
+Tests run against a **real local Supabase instance** — no mocking. The CI pipeline
+automatically spins up Supabase, applies migrations, runs tests, and tears down.
 
 ```bash
-# Run unit/integration tests (tests/db/**, tests/rls/** hit the real local instance)
+# Run unit & integration tests (tests/db/**, tests/rls/**)
 npm run test
 
-# Run E2E tests (starts `next dev` automatically)
+# Run E2E tests (starts next dev automatically)
 npm run e2e
 ```
 
-CI runs the same flow automatically per PR — `supabase start`, apply migrations, run
-tests, `supabase stop` — see `.github/workflows/ci.yml`.
+### Test Coverage
 
-## Features
+| Layer | What's Tested | Tools |
+|-------|---------------|-------|
+| **Database Functions** | Atomic operations, state transitions, race conditions | Jest + Supabase |
+| **RLS Policies** | Every role × resource combination | Jest + Supabase Auth |
+| **E2E: Customer Flow** | Menu browsing, ordering, status tracking | Playwright |
+| **E2E: Kitchen Flow** | Order acceptance, preparation, readiness | Playwright |
+| **E2E: Payment Flow** | Cash, card, digital wallet, refunds | Playwright |
+| **E2E: Session Locking** | Concurrent order attempts, race conditions | Playwright |
 
-### Customer Features
+---
 
-- Scan QR code to view menu
-- Browse categories and items
-- Place orders with special instructions
-- View order status in real-time
-- Request bill
+## 📖 Documentation
 
-### Staff Features
+| Document | Description |
+|----------|-------------|
+| [`feature-spec.md`](feature-spec.md) | Complete feature specifications, API contracts, permission matrix, and Definition of Done |
+| [`monorepo-structure.md`](monorepo-structure.md) | Detailed directory layout and package boundaries |
+| [`docs/workflow.md`](docs/workflow.md) | Implementation workflow index and progress tracking |
+| [`order.txt`](order.txt) | Condensed project requirements summary |
+| [`CLAUDE.md`](CLAUDE.md) | AI-assisted development guidelines and project conventions |
 
-- Kitchen dashboard with real-time orders
-- Order status management (Accept → Preparing → Ready)
-- Table status tracking
-- Payment processing (Cash, Card, Digital Wallet)
-- Bill calculation with tax and discounts
+---
 
-### Management Features
-
-- Restaurant settings and branding
-- Menu management (categories, items, images)
-- Table management with QR codes
-- Staff management and role assignment
-- Sales reports and analytics
-
-### Admin Features
-
-- Multi-restaurant management
-- User management across restaurants
-- System-wide settings
-
-## User Roles
-
-| Role             | Access                                        |
-| ---------------- | --------------------------------------------- |
-| Super Admin      | All restaurants, full system management       |
-| Restaurant Owner | Own restaurant settings, menu, staff, reports |
-| Manager          | Orders, staff scheduling, reports             |
-| Kitchen Staff    | Kitchen dashboard, order status updates         |
-| Waiter           | Table dashboard, order assistance            |
-| Cashier          | Payment processing, bill confirmation         |
-| Customer         | Menu browsing, order placement                |
-
-## Database Schema
-
-See `supabase/migrations/20250706000000_initial_schema.sql` for the complete schema.
-
-### Tables
-
-- `profiles` - User profiles with roles
-- `restaurants` - Restaurant information
-- `categories` - Menu categories
-- `menu_items` - Menu items
-- `tables` - Physical tables with QR codes
-- `order_sessions` - Active dining sessions
-- `orders` - Customer orders
-- `order_items` - Line items in orders
-- `payments` - Payment transactions
-
-### Key Features
-
-- Row Level Security (RLS) on all tables
-- 45 RLS policies for role-based access
-- Atomic functions for order creation and payment processing
-- Real-time subscriptions for live updates
-
-## API Endpoints
-
-### Public
-
-- `GET /api/menu/{restaurantId}` - Get restaurant menu
-
-### Auth Required
-
-- `POST /api/orders` - Create new order
-- `GET /api/orders/{orderId}` - Get order details
-- `POST /api/payments` - Process payment
-
-### Staff Only
-
-- `GET /api/restaurants/{id}/staff` - List restaurant staff
-- `POST /api/restaurants/{id}/staff` - Invite staff
-
-### Owner Only
-
-- `PUT /api/restaurants/{id}` - Update restaurant
-- `PUT /api/restaurants/{id}/logo` - Upload logo
-
-### Super Admin Only
-
-- `POST /api/restaurants` - Create restaurant
-- `DELETE /api/restaurants/{id}` - Delete restaurant
-- `GET /api/admin/users` - List all users
-
-## Deployment
-
-### netlify (Frontend)
-
-1. Connect your GitHub repository to Netlify
-2. Set environment variables in Netlify dashboard
-3. Deploy
-
-### Supabase (Backend)
-
-1. Create a new Supabase project
-2. Run migrations: `supabase db push`
-3. Set up storage buckets
-4. Configure RLS policies
-
-## Documentation
-
-- `order.txt` - Project requirements
-- `feature-spec.md` - Detailed feature specifications
-- `tech-stack.md` - Technology stack details
-- `monorepo-structure.md` - Directory structure guide
-- `docs/workflow.md` - Implementation workflow index
-- `docs/workflows/plan-1.md` - Test infrastructure workflow
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Check the [workflow index](docs/workflow.md) for implementation plans
+3. Check the [workflow index](docs/workflow.md) for active implementation plans
 4. Make your changes
-5. Run tests and linter
+5. Run tests and linter (`npm run test && npm run lint`)
 6. Submit a pull request
 
-## License
+> 💡 This project is built with AI-assisted development. See [`CLAUDE.md`](CLAUDE.md) for
+> architecture rules, code style, and development conventions used by the team.
 
-MIT
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<p align="center">
+  Built with ❤️ by the <strong>Team 06</strong>
+  ·
+  <a href="https://qrdine-demo.vercel.app">Live Demo</a>
+  ·
+  <a href="https://github.com/vibe-code-tours/team-06-app">GitHub</a>
+</p>

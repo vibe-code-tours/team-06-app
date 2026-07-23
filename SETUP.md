@@ -60,7 +60,7 @@ Now "no direct push, no self-merge" is structural, not a promise.
 
 ## 6. Connect a deploy target for PR previews (10 min)
 
-Connect **Netlify** or **Cloudflare Pages** to the repo. They build a **preview URL on
+Connect **Vercel** or **Cloudflare Pages** to the repo. They build a **preview URL on
 every PR** — click to see the change live. Let the platform deploy; don't hand-write deploy
 jobs. (Avoid Vercel Hobby for team projects — its free tier forbids teams/commercial use.)
 
