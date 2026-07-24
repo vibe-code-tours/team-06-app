@@ -193,7 +193,7 @@ style: |
 </div>
 </div>
 
-<div class="team-footer">9 developers </div>
+<div class="team-footer">8 developers </div>
 
 ---
 
@@ -666,14 +666,14 @@ Restaurants run on **paper tickets, verbal orders, and disjoint POS systems**:
 
 <div class="trole-card">
 <div class="trole-icon">🧑‍💼</div>
-<div class="trole-title">Thuzar</div>
+<div class="trole-title">Thuzar Thaung Sein</div>
 <div class="trole-gh">@thuzarthaungsein</div>
 <div class="trole-desc">Payment &amp; cashier flows · Manager dashboard · CI/CD · Project scaffolding</div>
 </div>
 
 <div class="trole-card">
 <div class="trole-icon">👤</div>
-<div class="trole-title">HlaHtun Thein</div>
+<div class="trole-title">Hla Htun Thein</div>
 <div class="trole-gh">@hlahtunthein09</div>
 <div class="trole-desc">RLS policies · Security fixes · Staff invite · Owner features · SSR · CRUD</div>
 </div>
@@ -694,30 +694,23 @@ Restaurants run on **paper tickets, verbal orders, and disjoint POS systems**:
 
 <div class="trole-card">
 <div class="trole-icon">🧑‍💼</div>
-<div class="trole-title">Phyo Phyo</div>
+<div class="trole-title">Phyo Phyo Myat Thu</div>
 <div class="trole-gh">@PHYOPHYO2397</div>
 <div class="trole-desc">Staff dashboard · Payment handoff · Table release · QR download</div>
 </div>
 
 <div class="trole-card">
 <div class="trole-icon">🧑‍💼</div>
-<div class="trole-title">Luna</div>
+<div class="trole-title">Eaint Pyae Phyo</div>
 <div class="trole-gh">@luna-devhub</div>
 <div class="trole-desc">Kitchen dashboard · Status bug fix · API patterns</div>
 </div>
 
 <div class="trole-card">
 <div class="trole-icon">👤</div>
-<div class="trole-title">Rover Aung Khine</div>
+<div class="trole-title">Aung Khine Moe</div>
 <div class="trole-gh">@rover-aungkhine</div>
 <div class="trole-desc">Demo video · Logo, theme &amp; slides · Script</div>
-</div>
-
-<div class="trole-card">
-<div class="trole-icon">👤</div>
-<div class="trole-title">David Sang</div>
-<div class="trole-gh">@David-Sang96</div>
-<div class="trole-desc">Team member</div>
 </div>
 
 </div>
