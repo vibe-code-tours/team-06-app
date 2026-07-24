@@ -29,12 +29,14 @@ export async function GET(request: Request) {
         return err('INTERNAL_ERROR', error.message, 500)
     }
 
-    // Filter out profiles where auth user no longer exists
+    // Filter out orphan profiles: no auth user OR empty full_name (from old trigger)
     const adminClient = createAdminClient()
     const { data: authUsers } = await adminClient.auth.admin.listUsers()
 
     const validProfiles = (data ?? []).filter(profile =>
-        authUsers?.users?.some(authUser => authUser.email === profile.email)
+        profile.full_name
+        && profile.full_name.trim()
+        && authUsers?.users?.some(authUser => authUser.email === profile.email)
     )
 
     return ok(validProfiles)
