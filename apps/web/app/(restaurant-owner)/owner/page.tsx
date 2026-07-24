@@ -314,24 +314,24 @@ export default function OwnerDashboard() {
           <TabsList className="flex w-full bg-white border border-gray-200 rounded-2xl p-1.5 shadow-sm">
             <TabsTrigger
               value="menu"
-              className="flex items-center gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
+              className="flex items-center gap-1 sm:gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
             >
-              <UtensilsCrossed className="h-4 w-4" />
-              Menu Management
+              <UtensilsCrossed className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Menu Management</span>
             </TabsTrigger>
             <TabsTrigger
               value="tables"
-              className="flex items-center gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
+              className="flex items-center gap-1 sm:gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
             >
-              <Store className="h-4 w-4" />
-              Table Management
+              <Store className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Table Management</span>
             </TabsTrigger>
             <TabsTrigger
               value="staff"
-              className="flex items-center gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
+              className="flex items-center gap-1 sm:gap-2 text-sm font-medium flex-1 justify-center rounded-xl py-2.5 transition-all data-[state=active]:bg-brand-blue data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:shadow-brand-blue/20 data-[state=inactive]:text-gray-500 data-[state=inactive]:hover:text-gray-700 data-[state=inactive]:hover:bg-gray-50"
             >
-              <Users className="h-4 w-4" />
-              Staff Management
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">Staff Management</span>
             </TabsTrigger>
           </TabsList>
 

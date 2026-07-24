@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Loader2, Trash2, RefreshCw, Shield, ChevronDown } from 'lucide-react'
+import { Loader2, Trash2, RefreshCw, Shield, ChevronDown, UserCheck } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface StaffRow {
     id: string
@@ -19,6 +20,17 @@ interface InviteRow {
     role: string
     status: string
     created_at: string
+}
+
+interface PendingApprovalRow {
+    id: string
+    email: string
+    role: string
+    full_name: string | null
+    phone: string | null
+    status: string
+    created_at: string
+    submitted_at: string | null
 }
 
 interface Props {
@@ -49,6 +61,16 @@ const formatTimeAgo = (dateString: string): string => {
     return date.toLocaleDateString()
 }
 
+const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    })
+}
+
 const isInviteExpired = (createdAt: string): boolean => {
     const date = new Date(createdAt)
     const now = new Date()
@@ -59,6 +81,7 @@ const isInviteExpired = (createdAt: string): boolean => {
 export default function StaffManagementTab({ restaurantId }: Props) {
     const [staff, setStaff] = useState<StaffRow[]>([])
     const [pendingInvites, setPendingInvites] = useState<InviteRow[]>([])
+    const [pendingApprovals, setPendingApprovals] = useState<PendingApprovalRow[]>([])
     const [inviteEmail, setInviteEmail] = useState('')
     const [inviteRole, setInviteRole] = useState('waiter')
     const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -68,6 +91,8 @@ export default function StaffManagementTab({ restaurantId }: Props) {
     const [resendingId, setResendingId] = useState<string | null>(null)
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [staffToDelete, setStaffToDelete] = useState<StaffRow | null>(null)
+    const [approvingId, setApprovingId] = useState<string | null>(null)
+    const [approveModal, setApproveModal] = useState<PendingApprovalRow | null>(null)
 
     const fetchStaff = async () => {
         const res = await fetch(`/api/staff?restaurant_id=${restaurantId}`)
@@ -85,9 +110,43 @@ export default function StaffManagementTab({ restaurantId }: Props) {
         }
     }
 
+    const fetchPendingApprovals = async () => {
+        const res = await fetch(`/api/staff/pending?restaurant_id=${restaurantId}`)
+        if (res.ok) {
+            const { data } = await res.json()
+            setPendingApprovals(data ?? [])
+        }
+    }
+
     useEffect(() => {
         fetchStaff()
         fetchPendingInvites()
+        fetchPendingApprovals()
+    }, [restaurantId])
+
+    // Subscribe to real-time invites changes so UI stays in sync
+    useEffect(() => {
+        const supabase = createClient()
+
+        const channel = supabase
+            .channel('staff-invites')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'invites',
+                },
+                () => {
+                    fetchPendingApprovals()
+                    fetchPendingInvites()
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
     }, [restaurantId])
 
     const parseError = async (res: Response): Promise<string> => {
@@ -148,8 +207,6 @@ export default function StaffManagementTab({ restaurantId }: Props) {
         setInviteEmail('')
         setInviteRole('waiter')
         setInviting(false)
-
-        // Refresh the pending invites list
         fetchPendingInvites()
     }
 
@@ -196,8 +253,6 @@ export default function StaffManagementTab({ restaurantId }: Props) {
     }
 
     const handleDeleteStaff = async (staffMember: StaffRow) => {
-        // Prevent self-deletion
-        // (This is also checked server-side, but we block it here for better UX)
         setDeletingId(staffMember.id)
         setErrorMessage(null)
         setSuccessMessage(null)
@@ -217,6 +272,31 @@ export default function StaffManagementTab({ restaurantId }: Props) {
         show_success(`${staffMember.full_name || staffMember.email} has been removed`)
         setDeletingId(null)
         setStaffToDelete(null)
+        fetchStaff()
+    }
+
+    const handleApprove = async () => {
+        if (!approveModal) return
+
+        setApprovingId(approveModal.id)
+        setErrorMessage(null)
+        setSuccessMessage(null)
+
+        const res = await fetch(`/api/staff/invites/${approveModal.id}/approve`, {
+            method: 'POST',
+        })
+
+        if (!res.ok) {
+            const errorMsg = await parseError(res)
+            show_error(errorMsg)
+            setApprovingId(null)
+            return
+        }
+
+        show_success(`${approveModal.full_name || approveModal.email} has been approved`)
+        setApprovingId(null)
+        setApproveModal(null)
+        fetchPendingApprovals()
         fetchStaff()
     }
 
@@ -285,10 +365,49 @@ export default function StaffManagementTab({ restaurantId }: Props) {
 
                 {/* Staff List */}
                 <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {/* Pending Approval Requests */}
+                    {pendingApprovals.length > 0 && (
+                        <>
+                            <div className="text-sm font-medium text-indigo-500 mb-2">
+                                Pending Approval ({pendingApprovals.length})
+                            </div>
+                            {pendingApprovals.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="p-3 border rounded bg-indigo-50 border-indigo-200"
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-indigo-700 truncate">
+                                                {item.full_name || 'Unknown'}
+                                            </div>
+                                            <div className="text-xs text-indigo-600">
+                                                {item.email} • <span className="font-medium">{ROLES.find(r => r.value === item.role)?.label || item.role}</span>
+                                            </div>
+                                            {item.submitted_at && (
+                                                <div className="text-xs text-indigo-400 mt-0.5">
+                                                    Submitted {formatTimeAgo(item.submitted_at)}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => setApproveModal(item)}
+                                        className="text-xs bg-indigo-600 hover:bg-indigo-700"
+                                    >
+                                        <UserCheck className="h-3 w-3 mr-1" />
+                                        Review & Approve
+                                    </Button>
+                                </div>
+                            ))}
+                        </>
+                    )}
+
                     {/* Pending Invites */}
                     {pendingInvites.filter(i => i.status === 'pending' && !isInviteExpired(i.created_at)).length > 0 && (
                         <>
-                            <div className="text-sm font-medium text-gray-500 mb-2">
+                            <div className="text-sm font-medium text-gray-500 mb-2 mt-4">
                                 Pending Invites ({pendingInvites.filter(i => i.status === 'pending' && !isInviteExpired(i.created_at)).length})
                             </div>
                             {pendingInvites
@@ -456,7 +575,7 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                     )}
 
                     {/* Active Staff */}
-                    {staff.length === 0 && pendingInvites.length === 0 ? (
+                    {pendingApprovals.length === 0 && staff.length === 0 && pendingInvites.length === 0 ? (
                         <p className="text-gray-500 text-center py-4">
                             No staff members yet
                         </p>
@@ -519,6 +638,77 @@ export default function StaffManagementTab({ restaurantId }: Props) {
                 </div>
             </CardContent>
         </Card>
+
+        {/* Approve Detail Modal */}
+        {approveModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                <Card className="w-full max-w-md mx-4">
+                    <CardContent className="pt-6">
+                        <div className="text-center mb-4">
+                            <div className="text-4xl mb-4">
+                                <UserCheck className="h-12 w-12 text-indigo-500 mx-auto" />
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-900 mb-2">Approve Staff Member</h2>
+                            <p className="text-sm text-gray-500">
+                                Review the details below before approving
+                            </p>
+                        </div>
+
+                        <div className="space-y-3 bg-gray-50 rounded-lg p-4 mb-6">
+                            <div>
+                                <span className="text-xs text-gray-500 uppercase font-medium">Full Name</span>
+                                <p className="text-sm font-medium text-gray-900">{approveModal.full_name || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <span className="text-xs text-gray-500 uppercase font-medium">Email</span>
+                                <p className="text-sm font-medium text-gray-900">{approveModal.email}</p>
+                            </div>
+                            <div>
+                                <span className="text-xs text-gray-500 uppercase font-medium">Role</span>
+                                <p className="text-sm font-medium text-gray-900">
+                                    {ROLES.find(r => r.value === approveModal.role)?.label || approveModal.role}
+                                </p>
+                            </div>
+                            <div>
+                                <span className="text-xs text-gray-500 uppercase font-medium">Phone Number</span>
+                                <p className="text-sm font-medium text-gray-900">{approveModal.phone || 'N/A'}</p>
+                            </div>
+                            {approveModal.submitted_at && (
+                                <div>
+                                    <span className="text-xs text-gray-500 uppercase font-medium">Submitted</span>
+                                    <p className="text-sm font-medium text-gray-900">{formatDate(approveModal.submitted_at)}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={() => setApproveModal(null)}
+                                disabled={approvingId === approveModal.id}
+                                className="flex-1"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleApprove}
+                                disabled={approvingId === approveModal.id}
+                                className="flex-1 bg-green-600 hover:bg-green-700"
+                            >
+                                {approvingId === approveModal.id ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                        Approving...
+                                    </>
+                                ) : (
+                                    'Approve'
+                                )}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        )}
 
         {/* Delete Confirmation Modal */}
         {staffToDelete && (
