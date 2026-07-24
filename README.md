@@ -392,6 +392,9 @@ npm run e2e
 | [`feature-spec.md`](feature-spec.md) | Complete feature specifications, API contracts, permission matrix, and Definition of Done |
 | [`monorepo-structure.md`](monorepo-structure.md) | Detailed directory layout and package boundaries |
 | [`docs/workflow.md`](docs/workflow.md) | Implementation workflow index and progress tracking |
+| [`docs/demo.md`](docs/demo.md) | Project demo slides used for the final presentation of QR Dine, including system overview, technology stack, live workflow, team contributions, and next steps. |
+| [`docs/tech-stack.md`](docs/tech-stack.md) | Technology decisions, schema reference, security model, and architecture |
+| [`docs/user-guide.md`](docs/user-guide.md) | User guide: role-based instructions for using the platform |
 | [`order.txt`](order.txt) | Condensed project requirements summary |
 | [`CLAUDE.md`](CLAUDE.md) | AI-assisted development guidelines and project conventions |
 
