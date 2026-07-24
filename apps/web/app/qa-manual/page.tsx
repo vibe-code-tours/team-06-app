@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   BarChart3,
+  ChefHat,
   ClipboardList,
   KeyRound,
   QrCode,
@@ -12,11 +13,56 @@ export const metadata = {
   title: "QA Test Manual — Restaurant QR Order System",
 };
 
-const demoAccounts = [
-  { role: "manager", label: "Manager" },
-  { role: "kitchen_staff", label: "Kitchen Staff" },
-  { role: "waiter", label: "Waiter" },
-  { role: "cashier", label: "Cashier" },
+interface DemoRestaurant {
+  name: string;
+  password: string;
+  accounts: { role: string; label: string; email: string }[];
+}
+
+const demoRestaurants: DemoRestaurant[] = [
+  {
+    name: "The Local Bistro (original demo)",
+    password: "password",
+    accounts: [
+      { role: "manager", label: "Manager", email: "manager@demo.local" },
+      { role: "kitchen_staff", label: "Kitchen Staff", email: "kitchen_staff@demo.local" },
+      { role: "waiter", label: "Waiter", email: "waiter@demo.local" },
+      { role: "cashier", label: "Cashier", email: "cashier@demo.local" },
+    ],
+  },
+  {
+    name: "Trattoria Demo1 (Italian)",
+    password: "Team06demo",
+    accounts: [
+      { role: "restaurant_owner", label: "Owner", email: "restaurant_owner.demo1@demo.local" },
+      { role: "manager", label: "Manager", email: "manager.demo1@demo.local" },
+      { role: "kitchen_staff", label: "Kitchen Staff", email: "kitchen_staff.demo1@demo.local" },
+      { role: "waiter", label: "Waiter", email: "waiter.demo1@demo.local" },
+      { role: "cashier", label: "Cashier", email: "cashier.demo1@demo.local" },
+    ],
+  },
+  {
+    name: "Sakura Sushi Demo2 (Japanese)",
+    password: "Team06demo",
+    accounts: [
+      { role: "restaurant_owner", label: "Owner", email: "restaurant_owner.demo2@demo.local" },
+      { role: "manager", label: "Manager", email: "manager.demo2@demo.local" },
+      { role: "kitchen_staff", label: "Kitchen Staff", email: "kitchen_staff.demo2@demo.local" },
+      { role: "waiter", label: "Waiter", email: "waiter.demo2@demo.local" },
+      { role: "cashier", label: "Cashier", email: "cashier.demo2@demo.local" },
+    ],
+  },
+  {
+    name: "Sunrise Café Demo3 (Brunch)",
+    password: "Team06demo",
+    accounts: [
+      { role: "restaurant_owner", label: "Owner", email: "restaurant_owner.demo3@demo.local" },
+      { role: "manager", label: "Manager", email: "manager.demo3@demo.local" },
+      { role: "kitchen_staff", label: "Kitchen Staff", email: "kitchen_staff.demo3@demo.local" },
+      { role: "waiter", label: "Waiter", email: "waiter.demo3@demo.local" },
+      { role: "cashier", label: "Cashier", email: "cashier.demo3@demo.local" },
+    ],
+  },
 ];
 
 export default function QaManualPage() {
@@ -48,30 +94,45 @@ export default function QaManualPage() {
             <KeyRound className="h-5 w-5" />
             Demo Accounts
           </h2>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 bg-brand-orange/10 border-b border-gray-200">
-              <p className="text-sm text-gray-700">
-                Password for every account:{" "}
-                <code className="px-1.5 py-0.5 rounded bg-white border border-gray-200 font-mono text-brand-orange">
-                  password
-                </code>
-              </p>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {demoAccounts.map((account) => (
-                <div
-                  key={account.role}
-                  className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap"
-                >
-                  <span className="text-sm font-medium text-gray-900">
-                    {account.label}
+          <p className="text-sm text-gray-500 mb-4">
+            Four demo restaurants are available. Pick any one and use its
+            accounts below — each restaurant has its own owner, manager,
+            kitchen staff, waiter, and cashier.
+          </p>
+          <div className="space-y-4">
+            {demoRestaurants.map((restaurant) => (
+              <div
+                key={restaurant.name}
+                className="bg-white border border-gray-200 rounded-xl overflow-hidden"
+              >
+                <div className="px-4 py-3 bg-brand-orange/10 border-b border-gray-200 flex items-center justify-between gap-3 flex-wrap">
+                  <span className="text-sm font-semibold text-gray-900">
+                    {restaurant.name}
                   </span>
-                  <code className="text-sm font-mono text-gray-600">
-                    {account.role}@demo.local
-                  </code>
+                  <span className="text-sm text-gray-700">
+                    Password:{" "}
+                    <code className="px-1.5 py-0.5 rounded bg-white border border-gray-200 font-mono text-brand-orange">
+                      {restaurant.password}
+                    </code>
+                  </span>
                 </div>
-              ))}
-            </div>
+                <div className="divide-y divide-gray-100">
+                  {restaurant.accounts.map((account) => (
+                    <div
+                      key={account.email}
+                      className="flex items-center justify-between gap-3 px-4 py-3 flex-wrap"
+                    >
+                      <span className="text-sm font-medium text-gray-900">
+                        {account.label}
+                      </span>
+                      <code className="text-sm font-mono text-gray-600">
+                        {account.email}
+                      </code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -171,16 +232,17 @@ export default function QaManualPage() {
                 activity across the restaurant.
               </p>
             </div>
-            {/* <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="bg-white border border-gray-200 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1.5">
                 <ChefHat className="h-4 w-4 text-brand-orange" />
                 <span className="font-medium text-sm">Restaurant Owner</span>
               </div>
               <p className="text-sm text-gray-500">
-                Log in and try creating a table, creating a menu item, and
-                inviting a staff member.
+                Log in with one of the new demo restaurants&apos; owner
+                accounts (Demo1/Demo2/Demo3) and try creating a table,
+                creating a menu item, and inviting a staff member.
               </p>
-            </div> */}
+            </div>
           </div>
         </section>
 
