@@ -136,6 +136,18 @@ export const inviteStaffSchema = z.object({
   role: z.enum(['restaurant_owner', 'manager', 'kitchen_staff', 'waiter', 'cashier']),
 });
 
+export const acceptInviteSchema = z.object({
+  full_name: z.string().min(1, 'Full name is required').max(100).transform(s => s.trim()),
+  phone: z.string().max(20).optional().default(''),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password must be 128 characters or less')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+});
+
 // ============================================================================
 // RATING VALIDATORS
 // ============================================================================
@@ -162,4 +174,5 @@ export type TableInput = z.infer<typeof tableSchema>;
 export type RestaurantInput = z.infer<typeof restaurantSchema>;
 export type UserInput = z.infer<typeof userSchema>;
 export type InviteStaffInput = z.infer<typeof inviteStaffSchema>;
+export type AcceptInviteInput = z.infer<typeof acceptInviteSchema>;
 export type RateOrderInput = z.infer<typeof rateOrderSchema>;
